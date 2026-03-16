@@ -26,6 +26,22 @@ This workspace captures zero-shot experiments where Anthropic Claude generates A
 - `src/run_few_shot.py` / `src/run_zero_shot.py` – convenience wrappers around the shared logic.
 - `results/` – completions organised by model id and prompt label.
 - `src/eval_with_clingo.sh` – helper to ground/check the produced ASP.
+- `src/fen_to_board_lp.py` – converts a FEN string/file into ASP facts.
+- `docs/board_configurations.md` – end-to-end checklist for curating chess positions.
+- `src/run_clingo.py` – Python wrapper to invoke Clingo with board/fact files.
+
+## Board configurations
+
+Follow the workflow in `docs/board_configurations.md` whenever you add a new puzzle. In short:
+
+1. Save the raw FEN under `data/boards/<name>.fen` (first line = FEN, subsequent `#` lines = metadata).
+2. Translate it into ASP facts:
+   ```bash
+   python src/fen_to_board_lp.py \
+     --fen-file data/boards/sample_mate_in_one.fen \
+     --output data/boards/sample_mate_in_one.lp
+   ```
+3. Feed that `.lp` file to either an LLM-generated solver or a handwritten baseline via `src/run_clingo.py`.
 
 ## Running Claude
 
@@ -54,3 +70,42 @@ This workspace captures zero-shot experiments where Anthropic Claude generates A
    ```
 
 All scripts share the same flags for `--max-new-tokens`, `--temperature`, and `--model-id`, so you can tweak sampling or override the `CLAUDE_MODEL` environment variable without touching multiple entry points.
+
+## Installing Clingo
+
+Pick whichever package manager matches your environment:
+
+- **macOS (Homebrew)**
+  ```bash
+  brew install clingo
+  ```
+- **Linux (conda-forge)**
+  ```bash
+  conda install -c conda-forge clingo
+  ```
+- **Python-only workflow**
+  ```bash
+  pip install clingo
+  ```
+
+After installation, verify everything is on the path:
+
+```bash
+clingo --version
+```
+
+You can optionally export `CLINGO_BIN=/full/path/to/clingo` if the binary lives outside your default `PATH`.
+
+## Running Clingo from Python
+
+Use the wrapper when you want a reproducible command that mixes generated programs, board facts, and optional gold constraints:
+
+```bash
+python src/run_clingo.py \
+  results/<model>/<prompt-label>/generated.lp \
+  --board data/boards/sample_mate_in_one.lp \
+  --facts gold/mate_in_one.lp \
+  --stats
+```
+
+The script assembles a `clingo` command with sane defaults (`--models 0`) and streams the solver output. Pass additional flags directly to Clingo by appending `-- <extra args>`, for example `-- --time-limit=60`.
