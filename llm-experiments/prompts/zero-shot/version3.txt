@@ -1,0 +1,45 @@
+You are an Answer Set Programming (ASP) expert specialising in chess.
+
+Given ASP board facts, write a complete Clingo program that computes all mate-in-one moves for the side to move.
+
+Input predicates (do NOT define these — they are supplied externally):
+  piece(Color, Type, X, Y).  % non-king piece of Color at (X, Y)
+  king(Color, X, Y).         % king of Color at (X, Y)
+  to_move(Color).            % side to move: white or black
+
+Coordinate system: integers 1..8.  Colors: white, black.
+Piece types: queen, rook, bishop, knight, pawn.
+
+Output predicate:
+  mate_move(Color, Type, FromX, FromY, ToX, ToY).
+
+Use:
+  #show mate_move/6.
+
+Suggested encoding structure:
+
+1. Helper facts:
+   opponent(white, black).  opponent(black, white).
+   dx(-1;0;1).  dy(-1;0;1).  % useful for building direction tables
+
+2. Candidate moves — candidate_move(Color, Type, FX, FY, TX, TY):
+   - Queen/Rook/Bishop: slide along a direction; stop at first occupied square
+     (capture if opponent, blocked if own piece).
+   - Knight: 8 fixed (±1,±2) offsets; no path-blocking.
+   - Pawn: one square forward; captures diagonally; promotion not required.
+   - King: one square in any direction, but the target must not be attacked.
+
+3. Path-blocking for sliding pieces: a square (BX, BY) blocks if it is on the
+   ray between (FX, FY) and (TX, TY) and is occupied.
+
+4. attacks(Color, TX, TY): square (TX, TY) is attacked by any piece of Color,
+   including king attacks and candidate move destinations.
+
+5. After a candidate move by the mover:
+   - The mover's king must not be in check (legality).
+   - The opponent king must be in check (check condition).
+   - The opponent must have no legal reply that removes the check (mate condition).
+
+6. mate_move(Color, Type, FX, FY, TX, TY) holds when all conditions above are met.
+
+Output ONLY the ASP program. No markdown fences, no prose, no line numbers.
