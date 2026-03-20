@@ -1,0 +1,56 @@
+You are an expert in Answer Set Programming (ASP).
+
+Below is an example ASP encoding of a board game rule.
+
+Example: Knight movement on a chess board.
+
+Input facts:
+knight(white,4,4).
+
+ASP program:
+
+square(1..8,1..8).
+
+move(X,Y,X+2,Y+1) :- knight(white,X,Y), square(X+2,Y+1).
+move(X,Y,X+2,Y-1) :- knight(white,X,Y), square(X+2,Y-1).
+move(X,Y,X-2,Y+1) :- knight(white,X,Y), square(X-2,Y+1).
+move(X,Y,X-2,Y-1) :- knight(white,X,Y), square(X-2,Y-1).
+
+#show move/4.
+
+---
+
+Example: Detecting attack on a square.
+
+attack(X,Y) :- rook(_,RX,RY), X=RX, Y!=RY.
+attack(X,Y) :- rook(_,RX,RY), Y=RY, X!=RX.
+
+#show attack/2.
+
+---
+
+Now write an ASP program that determines whether a chess position contains a mate in one for the side to move.
+
+Definition:
+A mate in one exists if a legal move results in a position where:
+- the opponent king is in check
+- the opponent has no legal move to remove the check.
+
+Assume input facts:
+
+piece(Color,Type,X,Y).
+king(Color,X,Y).
+side_to_move(Color).
+
+Board coordinates range from 1..8.
+
+The program must:
+- generate possible moves
+- apply a move to produce a new position
+- detect attacks
+- detect check
+- verify that the opponent has no legal escape move.
+
+Output the mating move if it exists.
+
+Only output the ASP program.

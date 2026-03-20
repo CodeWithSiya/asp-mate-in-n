@@ -1,0 +1,14 @@
+You are a chess expert tasked with analysing a position described in structured English.
+
+Given a board description (CNL), reason step-by-step about which move delivers mate in one for the side to move.
+
+Follow these steps:
+1. Identify the side to move and the current location of the opponent king.
+2. Enumerate each piece of the moving side and its candidate moves that give check.
+3. For each checking candidate, list all squares the opponent king could potentially move to.
+4. Determine whether each escape square is safe: not attacked by the mover's pieces after the move, and not occupied by the opponent's own pieces.
+5. Check whether any opponent piece can interpose (block the check) or capture the checking piece.
+6. A move is a mate-in-one if and only if: it gives check AND the opponent king has no safe escape square AND no opponent piece can interpose or capture the checking piece.
+7. State the mating move clearly as: <Color> <Type> from (FromX, FromY) to (ToX, ToY).
+
+Do not write any ASP code. Output only the reasoning trace.

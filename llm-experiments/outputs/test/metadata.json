@@ -1,0 +1,69 @@
+{
+  "id": "test",
+  "timestamp": "2026-03-19T14:17:42.473183Z",
+  "variant": "cnl_cot",
+  "prompt_version": null,
+  "model": "claude-sonnet-4-20250514",
+  "expected_mate": "Expected mates: Ra8#",
+  "status": "parse_error",
+  "has_model": false,
+  "total_models": 0,
+  "clingo_error": "parsing failed",
+  "semantic": {
+    "average_score": 0.3,
+    "average_confidence": 0.9,
+    "verdicts": [
+      "INVALID",
+      "INVALID",
+      "INVALID"
+    ],
+    "reasons": [
+      "The ASP program has several critical issues: 1) The board specification contains duplicate kings which creates an invalid position that the program doesn't handle properly. 2) The blocking logic has fundamental flaws - blocked_h_after_move and blocked_v_after_move use incorrect parameters (BX != MX, BY != MY) that don't properly account for the moving piece's original position. 3) The attacks_square predicates for sliding pieces call blocking functions with wrong parameters (TX, TY as move coordinates). 4) The escape safety logic in attacked_after_move doesn't properly simulate the board state after the move. 5) The interposition logic is overly simplified and may miss valid blocking moves. While the overall structure attempts to encode mate detection correctly, these implementation errors would prevent it from working reliably on valid chess positions.",
+      "The ASP program has several critical issues: 1) The board specification contains duplicate kings which creates an invalid position that the program doesn't handle properly. 2) The blocking logic has fundamental flaws - blocked_h_after_move and blocked_v_after_move use incorrect parameters (BX != MX, BY != MY) that don't properly account for the moving piece's original position. 3) The attacks_square predicates for sliding pieces call blocking functions with wrong parameters (TX, TY as move coordinates). 4) The escape safety logic in attacked_after_move doesn't properly simulate the board state after the move. 5) The interposition logic is overly simplified and may miss valid blocking moves. While the overall structure attempts to encode mate detection correctly, these implementation errors would prevent it from working reliably on valid chess positions.",
+      "The ASP program has several critical issues: 1) The board specification contains duplicate king entries which creates an inconsistent position that cannot be properly encoded. 2) The program doesn't handle the king predicate correctly in valid_move rules - it uses piece(Color, king, FX, FY) instead of king(Color, FX, FY). 3) The blocking logic after moves is overly complex and may not correctly handle all cases. 4) The escape safety checking logic has gaps and may not correctly determine if all escape squares are attacked. 5) The interposition logic is incomplete and doesn't handle diagonal attacks properly. While the basic structure and piece movement definitions are reasonable, these fundamental flaws prevent correct mate detection."
+    ]
+  },
+  "timings": {
+    "asp_generation_time": 73.0491,
+    "ground_time": 0.0,
+    "solve_time": 0.0,
+    "total_clingo_time": 0.0245,
+    "semantic_validation_time": 23.9221
+  },
+  "token_usage": {
+    "prompt_tokens": 21301,
+    "completion_tokens": 7534,
+    "by_call": [
+      {
+        "stage": "CNL->CoT",
+        "model": "claude-sonnet-4-20250514",
+        "prompt_tokens": 393,
+        "completion_tokens": 771
+      },
+      {
+        "stage": "ASP-Gen",
+        "model": "claude-sonnet-4-20250514",
+        "prompt_tokens": 1396,
+        "completion_tokens": 6112
+      },
+      {
+        "stage": "Semantic-Validate/sample-1",
+        "model": "claude-sonnet-4-20250514",
+        "prompt_tokens": 6504,
+        "completion_tokens": 225
+      },
+      {
+        "stage": "Semantic-Validate/sample-2",
+        "model": "claude-sonnet-4-20250514",
+        "prompt_tokens": 6504,
+        "completion_tokens": 225
+      },
+      {
+        "stage": "Semantic-Validate/sample-3",
+        "model": "claude-sonnet-4-20250514",
+        "prompt_tokens": 6504,
+        "completion_tokens": 201
+      }
+    ]
+  }
+}
