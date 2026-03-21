@@ -1,0 +1,23 @@
+{
+  "board": "mate_kf6_qd7",
+  "strategy": "zero_shot",
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-03-21T10:44:04.695623+00:00",
+  "average_score": 0.6166666666666667,
+  "average_confidence": 0.75,
+  "feedback": "Verdicts: ['INVALID', 'INVALID', 'VALID'] | avg_score=0.617 | avg_conf=0.75",
+  "semantic": {
+    "average_score": 0.6166666666666667,
+    "average_confidence": 0.75,
+    "verdicts": [
+      "INVALID",
+      "INVALID",
+      "VALID"
+    ],
+    "reasons": [
+      "The program has several issues: (1) Mate detection only checks king escape moves but ignores opponent pieces blocking the check or capturing the attacking piece, making it incomplete for general checkmate. (2) piece_after loses piece type information, causing the still_attacked queen-check to rely on the original piece() facts rather than post-move state. (3) The blocked_after_queen2 predicate checks piece(C, queen, QX, QY) against original board rather than verifying the moved queen's new position correctly. For the specific board position these may not matter if no interpositions exist, but the encoding is structurally incomplete.",
+      "Several issues: (1) piece_after stores color but not piece type, breaking the still_attacked queen check via piece_after+piece(C,queen,...) combination; (2) opp_king_escape does not check if the king can capture the attacking piece on an undefended square; (3) no interposition check (minor for adjacent queen checks); (4) king_attacks_after for moving side doesn't update king position when king moves; (5) blocked_queen uses arithmetic S-1 which may not work correctly in all ASP solvers without explicit integer domain. The program is partially correct and may work for this specific simple board but has logical gaps that make it INVALID in general.",
+      "The program correctly encodes queen and king movement, sliding piece blocking, check detection after moves, and the mate condition. Key issues: piece_after omits piece type (only stores color), which forces a join with the original piece/3 facts to identify queens in still_attacked - this works for non-moved pieces but is fragile. The king escape logic doesn't fully handle interposition (only relevant for non-queen checks). The still_attacked predicate has some redundancy. For the specific board (Qh7#), the program likely produces the correct mate_move output since the queen move to (8,7) gives check and the black king has no legal escape, all squares being covered or occupied."
+    ]
+  }
+}

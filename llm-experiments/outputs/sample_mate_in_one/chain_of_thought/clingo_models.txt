@@ -1,0 +1,14 @@
+No models found.
+parsing failed
+
+Clingo log messages:
+MessageCode.RuntimeError: <block>:261:9-10: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:309:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:474:10-11: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:644:9-10: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:725:9-10: error: syntax error, unexpected =, expecting )
+

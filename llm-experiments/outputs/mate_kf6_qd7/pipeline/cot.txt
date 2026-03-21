@@ -1,0 +1,76 @@
+I need to find a mate-in-one for White.
+
+## Step 1: Identify the pieces and king positions
+
+- White: Queen on (4,7), King on (6,6)
+- Black: King on (8,8)
+- White to move
+
+## Step 2: Identify the Black King's location and escape squares
+
+Black King is on (8,8). Its potential escape squares are all adjacent squares:
+- (7,7), (7,8), (8,7)
+- (8,8) is occupied by the king itself
+- Squares off the board: (9,8), (9,9), (8,9), (9,7) — all invalid
+
+So escape squares to consider: (7,7), (7,8), (8,7)
+
+## Step 3: Find candidate checking moves for White
+
+The White Queen is on (4,7). Let me find moves that give check to the Black King on (8,8).
+
+**Queen moves that attack (8,8):**
+- Diagonal from (4,7): moving along the diagonal where Δx=Δy. From (4,7) to (8,8) would require Δx=4, Δy=1 — not a diagonal.
+- Along rank 8: Queen moves to (8,7)? No, that's not rank 8. Queen moves to any square on rank 8: (5,8), (6,8), (7,8), (8,8). From (4,7), the queen can move to rank 8 by going to (4,8) then along rank 8... but the queen moves in straight lines. From (4,7) moving up to (4,8), then that's one move. To reach (8,8) in one move from (4,7): not on same rank, file, or diagonal.
+- Diagonal check: From (4,7), diagonals go to (5,8) [Δx=1,Δy=1], (3,8) [Δx=-1,Δy=1], (5,6), (3,6), etc. So (5,8) is on the diagonal from (4,7).
+- From (5,8): does it attack (8,8)? Yes, along rank 8: (5,8)→(6,8)→(7,8)→(8,8). So Queen on (5,8) attacks (8,8) along rank 8.
+
+**Queen to (5,8):** This gives check to Black King on (8,8) along rank 8 (path is clear: (6,8),(7,8) need to be empty — they are).
+
+## Step 4: Check if Queen to (5,8) is checkmate
+
+Black King on (8,8) must escape to (7,7), (7,8), or (8,7).
+
+**Queen on (5,8) attacks:**
+- Along rank 8: (6,8), (7,8), (8,8) ✓ — so (7,8) is attacked by queen
+- Along diagonal from (5,8): (6,7), (7,6)... and (4,7), (3,6)... and (6,9-invalid), (4,9-invalid)
+- Along file 5: (5,1)-(5,8)
+- Along rank 8: all of rank 8
+
+So Queen on (5,8) attacks (7,8) — escape square (7,8) is covered.
+
+**White King on (6,6) attacks:** (5,5),(6,5),(7,5),(5,6),(7,6),(5,7),(6,7),(7,7)
+- So (7,7) is attacked by the White King!
+
+**Escape square (8,7):** Is it attacked?
+- Queen on (5,8): attacks along rank 8 (not (8,7)), along file 5 (not (8,7)), along diagonal from (5,8): going down-right: (6,7),(7,6),(8,5) — not (8,7). Going down-left: (4,7),(3,6)... not (8,7).
+- White King on (6,6): attacks up to (7,7) but not (8,7).
+- (8,7) does not appear to be attacked.
+
+So (8,7) is a safe escape square — Queen to (5,8) is NOT checkmate.
+
+## Step 5: Try Queen to (7,8)
+
+Queen moves from (4,7) to (7,8) [diagonal: Δx=3, Δy=1 — not a diagonal]. Not valid.
+
+## Step 6: Try Queen to (6,8) — gives check along rank 8
+
+Queen on (6,8) attacks (8,8) along rank 8. Escape squares: (7,7),(7,8),(8,7).
+- (7,7): attacked by White King ✓
+- (7,8): attacked by Queen on (6,8) along rank 8 ✓
+- (8,7): attacked by Queen on (6,8)? Diagonal from (6,8): (7,7),(8,6)... not (8,7). File/rank — no. Not covered.
+
+Still (8,7) is free.
+
+## Step 7: Try Queen to (7,7) — diagonal move from (4,7)? Δx=3,Δy=0 — no, same rank. From (4,7) to (7,7) is along rank 7. Queen to (7,7) gives check diagonally to (8,8).
+
+Queen on (7,7): attacks (8,8) diagonally. Escape squares: (7,8),(8,7),(8,8-occupied).
+- (7,8): Queen on (7,7) attacks (7,8) along file 7 ✓
+- (8,7): Queen on (7,7) attacks (8,7) diagonally (Δx=1,Δy=-1 from (7,7)) — wait, (8,6) is that diagonal. From (7,7): diagonal goes (8,8) and (8,6),(6,8),(6,6)... (8,7) is not on queen's diagonals or lines from (7,7). File 7: (7,8),(7,6)... Rank 7: (8,7) — YES! Queen on (7,7) attacks along rank 7 to (8,7) ✓
+- White King on (6,6) attacks (7,7)? Yes, but queen just moved there — queen is White's piece, king can't capture own piece. Does Black King capture queen on (7,7)? Black King on (8,8) to (7,7): is (7,7) defended? White King on (6,6) defends (7,7) ✓
+
+So Black King cannot capture the queen, and all escape squares (7,8) and (8,7) are covered by the queen on (7,7). **Checkmate!**
+
+## Answer
+
+**White Queen from (4, 7) to (7, 7).**

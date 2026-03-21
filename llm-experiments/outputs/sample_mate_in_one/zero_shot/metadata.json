@@ -1,0 +1,58 @@
+{
+  "id": "sample_mate_in_one",
+  "timestamp": "2026-03-21T10:50:01.245619+00:00",
+  "variant": "zero_shot",
+  "model": "claude-sonnet-4-6",
+  "prompt_file": "prompts/zero-shot/prompt.txt",
+  "expected_mate": "Expected mates: Qh7#",
+  "fen_file": "/Users/nhliziyosibiya/Library/CloudStorage/OneDrive-UniversityofCapeTown/CSC4042Z ASP/Project/asp-mate-in-n/llm-experiments/data/boards/sample_mate_in_one.fen",
+  "token_usage": {
+    "prompt_tokens": 559,
+    "completion_tokens": 12952,
+    "by_call": [
+      {
+        "stage": "zero_shot",
+        "model": "claude-sonnet-4-6",
+        "prompt_tokens": 559,
+        "completion_tokens": 12952
+      }
+    ]
+  },
+  "clingo": {
+    "status": "parse_error",
+    "total_models": 0,
+    "error": "parsing failed",
+    "ground_time": 0.0,
+    "solve_time": 0.0,
+    "total_time": 0.0058,
+    "statistics": null,
+    "stdout": "",
+    "stderr": "",
+    "logs": [
+      "MessageCode.RuntimeError: <block>:129:9-10: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:134:9-10: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:231:9-11: error: syntax error, unexpected !=, expecting )\n",
+      "MessageCode.RuntimeError: <block>:264:13-14: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:274:13-14: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:283:13-14: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:440:10-11: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:449:10-11: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:535:13-14: error: syntax error, unexpected =, expecting )\n",
+      "MessageCode.RuntimeError: <block>:549:13-14: error: syntax error, unexpected =, expecting )\n"
+    ]
+  },
+  "semantic": {
+    "average_score": 0.45,
+    "average_confidence": 0.7333333333333334,
+    "verdicts": [
+      "INVALID",
+      "INVALID",
+      "INVALID"
+    ],
+    "reasons": [
+      "Several significant issues: (1) new_slide_clear and new2_slide_clear base cases are not anchored to piece positions, generating slides from every board square in every direction causing massive unsafe grounding; (2) king pieces appear in both piece() and king() facts creating duplicate occupied() entries; (3) disjunction in pawn attack rule bodies (using ';') is non-standard in ASP rule bodies and may cause grounding errors; (4) opp_reply_illegal only checks attacks from Color pieces but misses checking if opponent king remains in check from other attackers; (5) the overall structure for mate detection is logically sound but implementation flaws would likely prevent correct execution on most ASP solvers.",
+      "The program has several significant issues: (1) new_slide_clear and new2_slide_clear base cases are defined for all board squares without requiring a piece at the source, making them overly broad and potentially generating spurious attack paths; (2) occupied/new_occ may double-count kings since both piece(Color,king,...) and king(Color,...) facts exist; (3) disjunction in rule bodies (pawn captures using ';') may not be supported in standard ASP grounding; (4) the overall architecture for mate detection is sound but the sliding piece path computation on the post-move board is structurally flawed, likely producing incorrect check/attack results; (5) opp_reply_illegal relies on new2_attacks_color which inherits the same slide_clear issues. The approach is comprehensive but execution has critical encoding errors.",
+      "The program has correct high-level structure (legal moves, check detection, mate condition, correct predicates, correct output). However, several issues exist: (1) new_slide_clear base case fires for all board squares unconditionally, not just from specific piece positions, causing incorrect sliding attack computation on the post-move board; (2) occupied/any_piece double-counts kings since both piece() and king() facts are used; (3) disjunction in pawn attack body rules may cause ASP parsing issues; (4) the new2_slide_clear has the same unconditional base case problem; (5) opp_reply_illegal checks new2_attacks_color but the predicate may not correctly filter attacks by the moving color only; (6) extreme grounding complexity may prevent practical execution. The logical framework is sound but implementation bugs in sliding piece path computation on simulated boards likely produce incorrect results."
+    ]
+  }
+}
