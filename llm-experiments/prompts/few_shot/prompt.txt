@@ -1,0 +1,73 @@
+You are an expert in Answer Set Programming (ASP).
+
+Given a chess position in FEN notation, write a complete Clingo program that finds whether the side to move has a mate in one.
+
+A mate in one occurs if a legal move by the side to move leaves the opponent king in check and the opponent has no legal reply that removes the check.
+
+Below are representative ASP examples that illustrate the structures you should imitate.
+
+Example 1: Graph coloring with integrity constraints
+
+Input facts:
+node(a). node(b). node(c).
+edge(a,b). edge(b,c).
+
+ASP program:
+
+color(red;green;blue).
+
+1 { assign(N,C) : color(C) } 1 :- node(N).
+
+:- assign(X,C), assign(Y,C), edge(X,Y).
+
+#show assign/2.
+
+⸻
+
+Example 2: Knight movement on a chess board
+
+Input facts:
+knight(white,4,4).
+
+ASP program:
+
+coord(1..8).
+square(X,Y) :- coord(X), coord(Y).
+
+move(X,Y,X+2,Y+1) :- knight(white,X,Y), square(X+2,Y+1).
+move(X,Y,X+2,Y-1) :- knight(white,X,Y), square(X+2,Y-1).
+move(X,Y,X-2,Y+1) :- knight(white,X,Y), square(X-2,Y+1).
+move(X,Y,X-2,Y-1) :- knight(white,X,Y), square(X-2,Y-1).
+
+#show move/4.
+
+⸻
+
+Example 3: Generating a single choice
+
+ASP program:
+
+move(left;right;up;down).
+
+1 { action(A) : move(A) } 1.
+
+#show action/1.
+
+⸻
+
+Input predicates will be supplied separately at solve time — do NOT redefine them:
+piece(Color,Type,X,Y).
+king(Color,X,Y).
+side_to_move(Color).
+
+Board coordinates range from 1..8.
+
+Your program must:
+	•	generate legal moves and capture the resulting positions,
+	•	represent attacks between pieces,
+	•	detect check on the opponent king, and
+	•	ensure the opponent has no legal move that escapes check.
+
+Output the mating move using an appropriate predicate (e.g., mate_move/5).
+
+Only output the ASP program.

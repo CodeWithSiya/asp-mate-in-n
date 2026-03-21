@@ -1,0 +1,41 @@
+I need to find a move that delivers checkmate to the Black king on (8,8).
+
+## Step 1: Identify the position
+
+- White: Queen on (4,7), King on (7,6)
+- Black: King on (8,8)
+- White to move
+
+## Step 2: Identify the Black king's location and escape squares
+
+Black king is on (8,8). Its potential escape squares are all adjacent squares:
+- (7,7), (8,7), (7,8) — (8,8) is the corner, so only these three squares are on the board.
+
+Now check which of these are currently attacked or occupied:
+- (7,7): attacked by White King on (7,6)? Yes, king covers (7,7). Also attacked by White Queen on (4,7)? The queen on (4,7) attacks along rank 7: (5,7),(6,7),(7,7),(8,7) — yes, (7,7) is attacked by the queen.
+- (8,7): attacked by White Queen on (4,7) along rank 7 — yes.
+- (7,8): attacked by White King on (7,6)? King covers squares one step away: (7,7),(7,5),(6,5),(6,6),(6,7),(8,5),(8,6),(8,7) — wait, let me recount. King on (7,6) attacks: (6,5),(7,5),(8,5),(6,6),(8,6),(6,7),(7,7),(8,7). So (7,8) is NOT attacked by the White King. Is (7,8) attacked by the White Queen on (4,7)? The queen moves along ranks, files, and diagonals. From (4,7): diagonal going up-right: (5,8) — not (7,8). Along rank 7: no. Along file 4: no. Diagonal (4,7) to (7,8)? Difference is (+3,+1) — not a valid queen move. So (7,8) is not currently attacked by the queen.
+
+## Step 3: Find a checking move that also covers (7,8)
+
+I need to give check to (8,8) while also covering (7,8) (since (7,7) and (8,7) are already covered).
+
+**Candidate: Queen to (8,7)**
+- Queen moves from (4,7) to (8,7) along rank 7 — clear path? (5,7),(6,7),(7,7),(8,7) — all empty, yes.
+- Does this give check to Black king on (8,8)? Queen on (8,7) attacks (8,8) along file 8 — yes, check!
+- Now check escape squares for Black king:
+  - (8,8) is in check, king must move.
+  - (7,8): attacked by queen on (8,7)? Queen on (8,7) attacks diagonally: (7,8) is one step diagonally up-left — yes! Queen covers (7,8).
+  - (7,7): attacked by White King on (7,6) — yes. Also attacked by queen on (8,7) diagonally — yes.
+  - (8,7): occupied by the White Queen — Black king cannot move there.
+- All escape squares are covered.
+
+**Can Black interpose or capture?**
+- Black has only the king, no other pieces.
+- Can the Black king capture the queen on (8,7)? (8,7) is attacked by White King on (7,6) (since (8,7) is adjacent to (7,6))? King on (7,6) to (8,7): difference is (+1,+1) — yes, adjacent! So (8,7) is defended by the White King. Black king cannot capture the queen.
+
+## Conclusion
+
+Queen from (4,7) to (8,7) delivers checkmate.
+
+**White Queen from (4, 7) to (8, 7).**

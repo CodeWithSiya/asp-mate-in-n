@@ -1,0 +1,23 @@
+{
+  "board": "sample_mate_in_one",
+  "strategy": "zero_shot",
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-03-21T10:51:00.553516+00:00",
+  "average_score": 0.45,
+  "average_confidence": 0.7333333333333334,
+  "feedback": "Verdicts: ['INVALID', 'INVALID', 'INVALID'] | avg_score=0.450 | avg_conf=0.73",
+  "semantic": {
+    "average_score": 0.45,
+    "average_confidence": 0.7333333333333334,
+    "verdicts": [
+      "INVALID",
+      "INVALID",
+      "INVALID"
+    ],
+    "reasons": [
+      "Several significant issues: (1) new_slide_clear and new2_slide_clear base cases are not anchored to piece positions, generating slides from every board square in every direction causing massive unsafe grounding; (2) king pieces appear in both piece() and king() facts creating duplicate occupied() entries; (3) disjunction in pawn attack rule bodies (using ';') is non-standard in ASP rule bodies and may cause grounding errors; (4) opp_reply_illegal only checks attacks from Color pieces but misses checking if opponent king remains in check from other attackers; (5) the overall structure for mate detection is logically sound but implementation flaws would likely prevent correct execution on most ASP solvers.",
+      "The program has several significant issues: (1) new_slide_clear and new2_slide_clear base cases are defined for all board squares without requiring a piece at the source, making them overly broad and potentially generating spurious attack paths; (2) occupied/new_occ may double-count kings since both piece(Color,king,...) and king(Color,...) facts exist; (3) disjunction in rule bodies (pawn captures using ';') may not be supported in standard ASP grounding; (4) the overall architecture for mate detection is sound but the sliding piece path computation on the post-move board is structurally flawed, likely producing incorrect check/attack results; (5) opp_reply_illegal relies on new2_attacks_color which inherits the same slide_clear issues. The approach is comprehensive but execution has critical encoding errors.",
+      "The program has correct high-level structure (legal moves, check detection, mate condition, correct predicates, correct output). However, several issues exist: (1) new_slide_clear base case fires for all board squares unconditionally, not just from specific piece positions, causing incorrect sliding attack computation on the post-move board; (2) occupied/any_piece double-counts kings since both piece() and king() facts are used; (3) disjunction in pawn attack body rules may cause ASP parsing issues; (4) the new2_slide_clear has the same unconditional base case problem; (5) opp_reply_illegal checks new2_attacks_color but the predicate may not correctly filter attacks by the moving color only; (6) extreme grounding complexity may prevent practical execution. The logical framework is sound but implementation bugs in sliding piece path computation on simulated boards likely produce incorrect results."
+    ]
+  }
+}

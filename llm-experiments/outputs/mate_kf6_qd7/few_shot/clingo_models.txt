@@ -1,0 +1,14 @@
+No models found.
+parsing failed
+
+Clingo log messages:
+MessageCode.RuntimeError: <block>:8:6-13: error: syntax error, unexpected <IDENTIFIER>
+
+MessageCode.RuntimeError: <block>:23:283-284: error: lexer error, unexpected !
+
+MessageCode.RuntimeError: <block>:25:152-153: error: lexer error, unexpected !
+
+MessageCode.RuntimeError: <block>:52:82-83: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:64:5-6: error: syntax error, unexpected ","
+

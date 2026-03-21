@@ -1,6 +1,0 @@
-White pieces: king on (5, 2), king on (5, 2), rook on (1, 1).
-Black pieces: king on (8, 8), king on (8, 8).
-Side to move: white.
-Board coordinates: files and ranks 1..8 (a=1, b=2, ..., h=8).
-Input predicates available: piece(Color, Type, X, Y).  king(Color, X, Y).  to_move(Color).
-Task: find a mate-in-one for the side to move.

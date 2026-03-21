@@ -1,79 +1,139 @@
 # Mate-in-1 ASP Experiments
 
-This workspace captures zero-shot experiments where Anthropic Claude generates Answer Set Programs (ASPs) that identify mate-in-one moves in chess positions. The structure mirrors the SchASPLM pipeline but is trimmed down to the minimal pieces needed for a single-model, zero-shot study.
+This workspace houses a trimmed-down reproduction of the SchASPLM workflow for
+studying whether Anthropic Claude can synthesize Answer Set Programs (ASPs) that
+detect mate-in-one moves from Forsyth–Edwards Notation (FEN) boards. The scripts
+convert FENs into ASP facts, run several prompting strategies, solve the
+resulting programs with Clingo, and record semantic validation results.
 
 ## Anthropic Setup
 
-1. **Install the SDK**
+1. **Install the Python deps** (needed by every runner)
    ```bash
-   pip install anthropic
+   python -m pip install anthropic clingo
    ```
-2. **Export your API key**
+2. **Export your Claude key**
    ```bash
    export ANTHROPIC_API_KEY=sk-ant-...
    ```
-3. *(Optional)* Set a default Claude model
+3. **(Optional) Set a default model**
    ```bash
-   export CLAUDE_MODEL=claude-sonnet-4-20250514
+   export CLAUDE_MODEL=claude-sonnet-4-6
    ```
-   If `CLAUDE_MODEL` is unset the scripts fall back to `claude-sonnet-4-20250514`.
+   Each CLI also accepts `--model-id`; if omitted it falls back to
+   `$CLAUDE_MODEL` or `claude-sonnet-4-6`.
 
 ## Layout
 
-- `prompts/zero_shot_template.txt` – baseline zero-shot instruction block.
-- `prompts/few_shot/` – three curated few-shot prompts (`version1/2/3.txt`) that mirror the structures you specified.
-- `src/run_prompt.py` – Python entry point that calls Claude and understands prompt presets.
-- `src/run_few_shot.py` / `src/run_zero_shot.py` – convenience wrappers around the shared logic.
-- `results/` – completions organised by model id and prompt label.
-- `src/eval_with_clingo.sh` – helper to ground/check the produced ASP.
-- `src/fen_to_board_lp.py` – converts a FEN string/file into ASP facts.
-- `docs/board_configurations.md` – end-to-end checklist for curating chess positions.
-- `src/run_clingo.py` – Python wrapper to invoke Clingo with board/fact files.
+- `data/boards/*.fen` – curated mate-in-one boards. The first non-comment line
+  must be the raw FEN; subsequent lines starting with `#` capture metadata such
+  as the expected mate.
+- `outputs/<board-id>/<strategy>/` – artefacts for every run (generated ASP,
+  CNL/CoT traces when applicable, solver logs, metadata). Created by the
+  strategy runners and by `src/tools/run_experiment.py`.
+- `results/semantic/` – JSON verdicts plus `summary.md`, updated automatically
+  whenever a strategy finishes semantic validation.
+- `prompts/` – editable prompt templates for zero-shot, few-shot, chain of
+  thought, and the shared `syntax_guardrail.txt` snippet.
+- `src/tools/run_experiment.py` – orchestrator that runs zero-shot, few-shot,
+  chain-of-thought, and pipeline strategies on the same board set.
+- `src/strategies/*.py` – standalone entry points for each prompting strategy
+  as well as the configurable pipeline variants.
+- `src/tools/run_clingo.py` – CLI wrapper that converts a FEN to facts on the
+  fly before invoking the `clingo` binary.
+- `src/utils/fen_to_board_lp.py` – utility to inspect the facts produced for a
+  board (also used internally by the runners).
 
-## Board configurations
+## Preparing board configurations
 
-Follow the workflow in `docs/board_configurations.md` whenever you add a new puzzle. In short:
+1. Drop a new FEN file under `data/boards/`. Example:
+   ```
+   6k1/5ppp/8/8/8/8/5PPP/6KQ w - - 0 1
+   # Expected mates: Qh7#
+   ```
+2. Run `python src/utils/fen_to_board_lp.py --fen-file data/boards/<name>.fen \
+   --output data/boards/board_conversion.lp` whenever you want to inspect the
+   derived ASP facts manually. The helper overwrites `board_conversion.lp` every
+   time, so there is never a pile-up of `.lp` fact files.
+3. Every CLI accepts either individual `.fen` files or directories; internally
+   `collect_board_specs` walks the directories, deduplicates files, parses the
+   comments for `Expected` metadata, and exposes the facts plus a controlled
+   natural-language (CNL) description to downstream strategies.
 
-1. Save the raw FEN under `data/boards/<name>.fen` (first line = FEN, subsequent `#` lines = metadata).
-2. Translate it into ASP facts:
-   ```bash
-   python src/fen_to_board_lp.py \
-     --fen-file data/boards/sample_mate_in_one.fen \
-     --output data/boards/sample_mate_in_one.lp
-   ```
-3. Feed that `.lp` file to either an LLM-generated solver or a handwritten baseline via `src/run_clingo.py`.
+## Running Anthropic strategies
 
-## Running Claude
+### Run every strategy in one pass
 
-1. **Zero-shot via presets**
-   ```bash
-   python src/run_prompt.py --prompt-type zero-shot
-   ```
-   This loads `prompts/zero_shot_template.txt` by default. Pass `--prompt-file` to override.
-2. **Run all few-shot prompts with one command**
-   ```bash
-   python src/run_prompt.py --prompt-type few-shot
-   ```
-   The script cycles through the three templates in `prompts/few_shot/` and writes outputs to `results/<model>/few_shot_<version>/generated.lp`.
-3. **Helper scripts (optional)**
-   ```bash
-   python src/run_zero_shot.py
-   python src/run_few_shot.py
-   ```
-4. **Inspect results**
-   ```
-   results/<model>/<prompt-label>/generated.lp
-   ```
-5. **Evaluate with clingo (optional)**
-   ```bash
-   ./src/eval_with_clingo.sh results/<model>/few_shot_version1/generated.lp data/boards/sample_position.lp
-   ```
+```bash
+python src/tools/run_experiment.py data/boards/sample_mate_in_one.fen \
+  data/boards/mate_kf6_qd7.fen \
+  --output-dir outputs \
+  --syntax-guardrail \
+  --strategies zero_shot few_shot chain_of_thought pipeline
+```
 
-All scripts share the same flags for `--max-new-tokens`, `--temperature`, and `--model-id`, so you can tweak sampling or override the `CLAUDE_MODEL` environment variable without touching multiple entry points.
+Key flags:
+
+- `--strategies …` to pick a subset (default runs all four).
+- `--output-dir` changes where board folders are created (default: `outputs`).
+- `--few-shot-prompt`, `--zero-shot-prompt`, `--cot-prompt`, `--asp-prompt` let
+  you swap prompt files without editing the code.
+- `--max-new-tokens`, `--temperature`, and `--model-id` are forwarded to every
+  LLM call. If `--model-id` is omitted the resolved model is printed.
+- `--syntax-guardrail` appends `prompts/syntax_guardrail.txt` to every ASP
+  generation step (all strategy runners support the same flag).
+- `--clingo-retries N` controls how many times the pipeline will regenerate an
+  ASP when the solver fails (defaults to two retries, i.e., up to three
+  attempts per board).
+
+The orchestrator automatically runs Clingo and semantic validation for every
+strategy, so each board winds up with `asp.lp`, `clingo_models.txt`, and
+`metadata.json` under `outputs/<board>/<strategy>/`.
+
+### Run a single strategy
+
+- **Zero-shot** (FEN → ASP):
+  ```bash
+  python src/strategies/run_zero_shot.py data/boards/mate_kf6_qd7.fen \
+    --clingo --syntax-guardrail
+  ```
+  Add `--prompt-file` to point at an alternate template.
+- **Few-shot** (facts + CNL summary → ASP):
+  ```bash
+  python src/strategies/run_few_shot.py data/boards/*.fen \
+    --clingo --prompt-file prompts/few_shot/prompt.txt
+  ```
+- **Chain of thought** (CNL → CoT → ASP):
+  ```bash
+  python src/strategies/run_chain_of_thought.py data/boards/mate_kf6_qd7.fen \
+    --clingo --syntax-guardrail
+  ```
+  Swap the reasoning or ASP instructions via `--cot-prompt` / `--asp-prompt`.
+- **Pipeline** (configurable variants):
+  ```bash
+  python src/strategies/run_pipeline.py data/boards/mate_kf6_qd7.fen \
+    --variant cnl_cot --clingo-retries 2 --syntax-guardrail
+  ```
+  Supported variants: `zero_shot`, `cnl_only`, `cot_only`, `cnl_cot` (default).
+  The pipeline always runs Clingo and semantic validation; retried attempts and
+  feedback loops are saved alongside the final artefacts.
+
+### Outputs and semantic scoring
+
+- `outputs/<board>/<strategy>/asp.lp` – the latest ASP program.
+- `clingo_models.txt` – solver transcript with models/statistics from the final
+  attempt. Intermediate attempts (pipeline) are retained as
+  `clingo_models_attempt*.txt`.
+- `cnl.txt` / `cot.txt` – emitted when a strategy reasons through those stages.
+- `metadata.json` – run metadata, token usage, solver diagnostics, and semantic
+  scores.
+- `results/semantic/<strategy>/<board>.json` – structured verdict logged by
+  `semantic_validate`. The rendered Markdown table lives in
+  `results/semantic/summary.md`.
 
 ## Installing Clingo
 
-Pick whichever package manager matches your environment:
+Install the command-line solver with whichever package manager you prefer:
 
 - **macOS (Homebrew)**
   ```bash
@@ -85,27 +145,31 @@ Pick whichever package manager matches your environment:
   ```
 - **Python-only workflow**
   ```bash
-  pip install clingo
+  python -m pip install clingo
   ```
 
-After installation, verify everything is on the path:
+After installation, confirm the executable is discoverable (or set
+`CLINGO_BIN`):
 
 ```bash
 clingo --version
 ```
 
-You can optionally export `CLINGO_BIN=/full/path/to/clingo` if the binary lives outside your default `PATH`.
-
 ## Running Clingo from Python
 
-Use the wrapper when you want a reproducible command that mixes generated programs, board facts, and optional gold constraints:
+Use the wrapper to combine a generated ASP with a board on the fly:
 
 ```bash
-python src/run_clingo.py \
-  results/<model>/<prompt-label>/generated.lp \
-  --board data/boards/sample_mate_in_one.lp \
-  --facts gold/mate_in_one.lp \
+python src/tools/run_clingo.py \
+  outputs/mate_kf6_qd7/few_shot/asp.lp \
+  --fen-board data/boards/mate_kf6_qd7.fen \
   --stats
 ```
 
-The script assembles a `clingo` command with sane defaults (`--models 0`) and streams the solver output. Pass additional flags directly to Clingo by appending `-- <extra args>`, for example `-- --time-limit=60`.
+The script converts the FEN into `data/boards/board_conversion.lp` (overwriting
+it each time), then invokes the `clingo` binary with sensible defaults
+(`--models 0`). Pass additional solver flags after `--`, for example
+`-- --time-limit=60 --threads=4`.
+
+All runners also expose `--clingo-path` via this helper, so you can point to a
+non-standard installation by exporting `CLINGO_BIN=/full/path/to/clingo`.

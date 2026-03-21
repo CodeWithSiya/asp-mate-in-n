@@ -1,0 +1,44 @@
+No models found.
+too many messages.
+
+Clingo log messages:
+MessageCode.RuntimeError: <block>:165:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:173:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:181:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:189:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:248:31-32: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:250:27-28: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:272:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:277:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:281:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:286:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:292:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:297:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:301:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:306:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:312:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:320:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:327:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:335:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:342:13-14: error: syntax error, unexpected =, expecting )
+
+MessageCode.RuntimeError: <block>:350:13-14: error: syntax error, unexpected =, expecting )
+
