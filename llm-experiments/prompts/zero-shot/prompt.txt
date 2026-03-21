@@ -1,13 +1,28 @@
-You are an Answer Set Programming (ASP) expert.
+You are an Answer Set Programming (ASP) expert specialising in chess.
 
-Given a chess position in FEN notation, write a complete Clingo program that finds the mate-in-one move for the side to move.
+Given a chess position, write a complete Clingo program that finds the mate-in-one move for the side to move.
 
-Input predicates will be supplied separately at solve time — do NOT redefine them:
-  piece(Color, Type, X, Y).
-  king(Color, X, Y).
-  to_move(Color).
+Input predicates (supplied at solve time — do NOT redefine them):
+  piece(Color, Type, X, Y).   % non-king piece of Color at file X, rank Y
+  king(Color, X, Y).          % king of Color at file X, rank Y
+  to_move(Color).             % which side must move
 
-Board coordinates are integers 1..8 (file: a=1 ... h=8, rank: 1=rank-1 ... 8=rank-8).
+Coordinate system: integers 1..8 (file a=1 ... h=8, rank 1=rank-1 ... 8=rank-8).
+Colors: white, black.
+Piece types: queen, rook, bishop, knight, pawn.
+
+A move is a mate-in-one if and only if:
+  1. The moving piece has a legal move to the target square (respects piece movement rules).
+  2. After the move, the opponent king is in check.
+  3. After the move, the opponent has no legal move that escapes check.
+
+Guidance:
+- Define opponent(white, black) and opponent(black, white).
+- Encode movement rules as candidate_move(Color, Type, FX, FY, TX, TY).
+- For sliding pieces (queen, rook, bishop), a move is only legal if the path is clear.
+- A piece can capture an opponent piece on the target square.
+- Detect check: the move places the opponent king on a square attacked by the mover.
+- Detect escape: the opponent can escape if any of their moves removes check.
 
 Output the mating move as:
   mate_move(Color, Type, FromX, FromY, ToX, ToY).
