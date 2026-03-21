@@ -3,6 +3,10 @@ rows(1..8).
 cols(1..8).
 square(R, C):- rows(R), cols(C).
 
+%column display names
+%col_name(1,a). col_name(2,b). col_name(3,c). col_name(4,d).
+%col_name(5,e). col_name(6,f). col_name(7,g). col_name(8,h).
+
 %define players
 player(white; black).
 
@@ -10,6 +14,7 @@ player(white; black).
 pieceType(king; queen; pawn; rook; bishop; knight).
 
 %define the initial positions]
+% placement(white, queen, wq, 7, 2).
 placement(white, king, wk, 8, 7).
 placement(white, rook, wr1, 8, 4).
 placement(white, pawn, wp1, 6, 8).
@@ -186,9 +191,9 @@ black_threatens(R2, C2):-
 %squares the white king threatens
 white_threatens(R2, C2):- 
                         new_placement(wk, R1, C1),
+                        % placement(white, king, wk, R1, C1),
+                        % placement(white, king, wk, R1, C1),  %where white king is after move
                         king_moves(R1, C1, R2, C2).
-
-%squared the white queen threatens
 white_threatens(R2, C2):- 
                         new_placement(ID, R1, C1),
                         piece_type(white, ID, queen),
@@ -196,36 +201,37 @@ white_threatens(R2, C2):-
                         not blocked_excluding_bk(R1, C1, R2, C2),
                         (R1, C1) != (R2, C2),
                         not new_placement(ID, R2, C2).
-%squared the white pawns threaten
+
 white_threatens(R2, C2):- 
-                        new_placement(ID, R1, C1),  %where white pawn is after move
+                        new_placement(ID, R1, C1),  %where white king is after move
+                        % placement(white, pawn, ID, _, _),
                         piece_type(white, ID, pawn),
                         R2 = R1-1, C2 = C1+1,
                         square(R2, C2). %pawns threaten diagonally forward
 white_threatens(R2, C2):- 
-                        new_placement(ID, R1, C1),
+                        new_placement(ID, R1, C1),  %where white king is after move
+                        % placement(white, pawn, ID, _, _),
                         piece_type(white, ID, pawn),
                         R2 = R1-1, C2 = C1-1,
                         square(R2, C2). %pawns threaten diagonally forward
 
-%squared the white rook threatens
+
 white_threatens(R2, C2):- 
                         new_placement(ID, R1, C1),
                         piece_type(white, ID, rook),
+                        % placement(white, rook, ID, _, _),
                         rook_moves(R1, C1, R2, C2),
                         not blocked_excluding_bk(R1, C1, R2, C2).
-
-%squared the white bishops threaten
 white_threatens(R2, C2):- 
                         new_placement(ID, R1, C1),
                         piece_type(white, ID, bishop),
+                        % placement(white, bishop, ID, _, _),
                         bishop_moves(R1, C1, R2, C2),
                         not blocked_excluding_bk(R1, C1, R2, C2).
-
-%squares the white knight threaten
 white_threatens(R2, C2):-
                         new_placement(ID, R1, C1),
                         piece_type(white, ID, knight),
+                        % placement(white, knight, ID, _, _),
                         knight_moves(R1, C1, R2, C2),
                         not blocked_excluding_bk(R1, C1, R2, C2).
 
@@ -250,19 +256,19 @@ legal_pawn_move(P, S, R1, C1, R2, C2):-
 legal_rook_move(P, S, R1, C1, R2, C2):-
                                 player(P), 
                                 state(S),
-                                rook_moves(R1, C1, R2, C2), %valid move for a rook
+                                rook_moves(R1, C1, R2, C2),
                                 not blocked(S, R1, C1, R2, C2),
                                 not friendly(P, R2, C2).
 legal_bishop_move(P, S, R1, C1, R2, C2):-
                                 player(P), 
                                 state(S),
-                                bishop_moves(R1, C1, R2, C2), %valid move for a bishop
+                                bishop_moves(R1, C1, R2, C2),
                                 not blocked(S, R1, C1, R2, C2),
                                 not friendly(P, R2, C2).
 legal_knight_move(P, S, R1, C1, R2, C2):-
                                 player(P), 
                                 state(S),
-                                knight_moves(R1, C1, R2, C2), %valid move for a knight
+                                knight_moves(R1, C1, R2, C2),
                                 not blocked(S, R1, C1, R2, C2),
                                 not friendly(P, R2, C2).
 
@@ -319,6 +325,10 @@ captured(ID1, ID2, R2, C2):-
                             new_placement(ID1, R2, C2), 
                             placement(_, _, ID2, R2, C2), ID1!=ID2. 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%we'll need to remove captured pieces from the board when we check for legal moves and threats after the move, as they are no longer there.
+
+
 %a piece moves to a square, lets say white.
 %a square is attacked by white if the piece, in the posn after it moved, could legally move to that square 
 %we need the new posn - to get the current posn, and then from this posn, track squareswe could move into
@@ -356,7 +366,15 @@ in_check(black):-
                     threaten(_, _, _, R, C), 
                     placement(black, king, bk, R, C).
 
+%block attacker path
+
+
 %check if black king can escape by moving away
+% can_escape(black):- 
+%                     new_placement(bk, R1, C1), 
+%                     legal_king_move(black, R1, C1, R2, C2), 
+%                     % threaten(_, R2, C2, _, _),
+%                     not white_threatens(R2, C2).
 can_escape(black):- 
                     new_placement(bk, R1, C1), 
                     legal_king_move(black, R1, C1, R2, C2), 
@@ -370,6 +388,12 @@ checkmate(black):- in_check(black), not can_escape(black).
 :- not checkmate(black).
 
 #show move/5.
+% #show friendly/3.
+% #show legal_king_move/4.
+
 #show in_check/1.
 #show can_escape/1.
+% #show black_legal_move/5.
+% #show on_attack_path/2.
+% #show attacker_square/2.
 #show checkmate/1.

@@ -48,7 +48,7 @@ between_diagonal(R_curr, C_curr, R1, C1, R2, C2):- square(R_curr, C_curr), squar
 between_diagonal(R_curr, C_curr, R1, C1, R2, C2):- square(R_curr, C_curr), square(R1, C1), square(R2, C2), |R1-R_curr| = |C1-C_curr|, |R2-R1| = |C2-C1|, R1<R_curr, R_curr<R2, C1>C_curr, C_curr>C2. %top left to bottom right diagonal
 between_diagonal(R_curr, C_curr, R1, C1, R2, C2):- square(R_curr, C_curr), square(R1, C1), square(R2, C2), |R1-R_curr| = |C1-C_curr|, |R2-R1| = |C2-C1|, R2<R_curr, R_curr<R1, C2>C_curr, C_curr>C1. %bottom right to top left diagonal
 
-%movement states
+%movement states - we need to keep track of the board state before and after the move, as pieces can be captured and removed from the board, which affects legal moves and threats.
 state(before; after).
 
 %defining occupied squares
@@ -141,7 +141,7 @@ new_placement(ID, R, C):-
                             not captured(_, ID, _, _). %if the piece is not moved, it stays in the same place.
 
 %defining an attack
-%See if piece was captured - check if after a move, 
+%See if piece was captured - check if after a move, if there is another piece in the new position, then the piece in the new position was captured.
 captured(ID1, ID2, R2, C2):- 
                             new_placement(ID1, R2, C2), 
                             placement(_, _, ID2, R2, C2), ID1!=ID2. 
