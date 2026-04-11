@@ -10,19 +10,9 @@ player(white; black).
 pieceType(king; queen; pawn; rook; bishop; knight).
 
 %define the initial positions of the pieces on the board
-placement(white, king, wk, 8, 7).
-placement(white, rook, wr1, 8, 4).
-placement(white, pawn, wp1, 6, 8).
-placement(white, pawn, wp2, 7, 7).
-placement(white, pawn, wp3, 7, 6).
-
-placement(black, pawn, bp1, 2, 6).
-placement(black, pawn, bp2, 2, 7).
-placement(black, pawn, bp3, 2, 8).
-placement(black, pawn, bp4, 4, 1).
-placement(black, king, bk, 1, 7).
-placement(black, rook, br1, 7, 2).
-placement(black, bishop, bb1, 5, 6).
+placement(white, queen, wq, 7, 2).
+placement(white, king, wk, 6, 8).
+placement(black, king, bk, 8, 8).
 
 %piece next to move
 to_move(white).
