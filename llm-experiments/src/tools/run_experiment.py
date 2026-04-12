@@ -13,7 +13,6 @@ if str(SRC_ROOT) not in sys.path:
 
 from utils.board_utils import collect_board_specs
 from utils.llm_utils import build_anthropic_client
-from utils.guardrails import load_syntax_guardrail
 from strategies.run_zero_shot import (
     DEFAULT_PROMPT as ZERO_SHOT_PROMPT,
     run_zero_shot_on_boards,
@@ -27,7 +26,7 @@ from strategies.run_chain_of_thought import (
     ASP_PROMPT as DEFAULT_ASP_PROMPT,
     run_chain_of_thought_on_boards,
 )
-from strategies.run_pipeline import run_pipeline_with_args
+from strategies.run_pipeline import run_pipeline
 
 
 DEFAULT_STRATEGIES: Sequence[str] = (
@@ -40,9 +39,13 @@ DEFAULT_STRATEGIES: Sequence[str] = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run every prompting strategy sequentially on the same board set."
+        description="Run every prompting strategy sequentially on the same set of base ASP fragments."
     )
-    parser.add_argument("inputs", nargs="+", help=".fen files or directories containing them.")
+    parser.add_argument(
+        "inputs",
+        nargs="+",
+        help="*_base.lp files or directories containing them (e.g., data/base).",
+    )
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -103,11 +106,6 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_STRATEGIES),
         help="Subset of strategies to run (default: all).",
     )
-    parser.add_argument(
-        "--syntax-guardrail",
-        action="store_true",
-        help="Append the shared Clingo syntax guardrail to every ASP-generation prompt.",
-    )
     return parser.parse_args()
 
 
@@ -118,7 +116,6 @@ def run_experiment(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     client, model_name = build_anthropic_client(model_id=args.model_id)
-    guardrail_text = load_syntax_guardrail() if args.syntax_guardrail else None
     selected = list(dict.fromkeys(args.strategies))  # preserve order, drop duplicates
     spec_count = len(specs)
     print(
@@ -138,8 +135,6 @@ def run_experiment(args: argparse.Namespace) -> None:
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             prompt_file=args.zero_shot_prompt,
-            run_clingo=True,
-            syntax_guardrail=guardrail_text,
         )
 
     if "few_shot" in selected:
@@ -154,8 +149,6 @@ def run_experiment(args: argparse.Namespace) -> None:
             prompt_file=args.few_shot_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            run_clingo=True,
-            syntax_guardrail=guardrail_text,
         )
 
     if "chain_of_thought" in selected:
@@ -173,27 +166,29 @@ def run_experiment(args: argparse.Namespace) -> None:
             asp_prompt_path=args.asp_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            run_clingo=True,
-            syntax_guardrail=guardrail_text,
         )
 
     if "pipeline" in selected:
         print("\n=== Pipeline strategy ===")
-        pipeline_args = argparse.Namespace(
-            inputs=args.inputs,
+        zero_shot_system = args.zero_shot_prompt.read_text()
+        cot_instruction = args.cot_prompt.read_text()
+        asp_instruction = args.asp_prompt.read_text()
+        run_pipeline(
+            specs,
+            output_root=args.output_dir,
+            client=client,
+            model=model_name,
+            zero_shot_system=zero_shot_system,
+            cot_instruction=cot_instruction,
+            asp_instruction=asp_instruction,
+            zero_shot_prompt_path=args.zero_shot_prompt,
+            cot_prompt_path=args.cot_prompt,
+            asp_prompt_path=args.asp_prompt,
             variant="cnl_cot",
-            zero_shot_prompt=args.zero_shot_prompt,
-            cot_prompt=args.cot_prompt,
-            asp_prompt=args.asp_prompt,
-            model_id=args.model_id,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            output_dir=args.output_dir,
             clingo_retries=args.clingo_retries,
-            syntax_guardrail=bool(guardrail_text),
-            syntax_guardrail_text=guardrail_text,
         )
-        run_pipeline_with_args(pipeline_args)
 
     print("\nAll requested strategies completed.")
 

@@ -31,14 +31,13 @@ class TokenUsage:
     def accumulate(self, stage: str, model: str, usage: Any) -> None:
         if not usage:
             return
-        pt = int(getattr(usage, "input_tokens", 0) or 0)
-        ct = int(getattr(usage, "output_tokens", 0) or 0)
+        pt = int(getattr(usage, "input_tokens", getattr(usage, "prompt_tokens", 0)) or 0)
+        ct = int(getattr(usage, "output_tokens", getattr(usage, "completion_tokens", 0)) or 0)
         self.prompt_tokens += pt
         self.completion_tokens += ct
         self.by_call.append(
             {
                 "stage": stage,
-                "model": model,
                 "prompt_tokens": pt,
                 "completion_tokens": ct,
             }

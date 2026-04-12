@@ -1,3 +1,4 @@
+
 %define the chess board
 rows(1..8).
 cols(1..8).

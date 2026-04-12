@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from .llm_utils import llm_chat
+from functools import lru_cache
+
+from .clingo_utils import run_clingo_program
 
 
 def _strip_md_fences(text: str) -> str:
@@ -34,6 +37,57 @@ def _parse_json_response(raw: str) -> dict | None:
     return None
 
 
+def _summarize_clingo_result(result: dict[str, Any] | None) -> dict[str, Any] | None:
+    if result is None:
+        return None
+    summary: dict[str, Any] = {
+        "status": "ok",
+        "models": [],
+        "parsed": bool(result.get("parsed", True)),
+        "total_models": int(result.get("total_models", 0) or 0),
+        "error": result.get("error_msg") or "",
+    }
+    if not summary["parsed"]:
+        summary["status"] = "parse_error"
+        return summary
+    if summary["total_models"] == 0:
+        summary["status"] = "no_models"
+        return summary
+
+    models = []
+    for model in result.get("models", []) or []:
+        atoms = sorted(str(symbol) for symbol in model)
+        models.append(atoms)
+    summary["models"] = sorted(models)
+    return summary
+
+
+def _compare_reference_to_candidate(
+    reference_summary: dict[str, Any] | None,
+    candidate_summary: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if reference_summary is None:
+        return None
+
+    status: str
+    if reference_summary["status"] != "ok":
+        status = f"reference_{reference_summary['status']}"
+    elif candidate_summary is None:
+        status = "candidate_unavailable"
+    elif candidate_summary["status"] != "ok":
+        status = f"candidate_{candidate_summary['status']}"
+    else:
+        status = "match" if reference_summary["models"] == candidate_summary["models"] else "mismatch"
+
+    return {
+        "status": status,
+        "reference_models": reference_summary.get("models", []),
+        "candidate_models": (candidate_summary or {}).get("models", []),
+        "reference_total_models": reference_summary.get("total_models", 0),
+        "candidate_total_models": (candidate_summary or {}).get("total_models", 0),
+    }
+
+
 def semantic_validate(
     client: Any,
     *,
@@ -43,6 +97,9 @@ def semantic_validate(
     samples: int = 3,
     temperature: float = 0.1,
     max_new_tokens: int = 1500,
+    reference_code: str | None = None,
+    reference_path: Path | None = None,
+    candidate_clingo: dict[str, Any] | None = None,
 ) -> tuple[str, float, float, dict]:
     """LLM-based semantic validation of generated ASP against a board specification."""
 
@@ -58,10 +115,21 @@ def semantic_validate(
         '{ "verdict": "VALID|INVALID", "score": 0..1, "confidence": 0..1, "reasons": "string" }\n'
         "Scoring: 1.0 = all conditions correctly encoded; 0.7-0.9 = minor omissions; 0.4-0.6 = partial; <0.4 = poor."
     )
-    user_prompt = (
-        f"Board specification:\n{spec_text}\n\n"
-        f"Generated ASP program:\n{asp_code}\n\nReturn JSON only."
-    )
+    if reference_code:
+        user_prompt = (
+            f"Board specification:\n{spec_text}\n\n"
+            f"Reference ASP (known correct):\n{reference_code}\n\n"
+            f"Candidate ASP program:\n{asp_code}\n\nReturn JSON only."
+        )
+        system_prompt += (
+            "\nCompare the candidate against the reference: award VALID only if the candidate"
+            " satisfies the mate-in-one criteria even when it differs. Cite differences in your reasons."
+        )
+    else:
+        user_prompt = (
+            f"Board specification:\n{spec_text}\n\n"
+            f"Generated ASP program:\n{asp_code}\n\nReturn JSON only."
+        )
 
     votes: list[str] = []
     scores: list[float] = []
@@ -112,7 +180,28 @@ def semantic_validate(
         "verdicts": votes,
         "reasons": [reason for reason in reasons_agg if reason],
     }
+
+    reference_summary = None
+    candidate_summary = None
+    if reference_code:
+        reference_summary = _summarize_clingo_result(_solve_reference(reference_code))
+    if candidate_clingo is not None:
+        candidate_summary = _summarize_clingo_result(candidate_clingo)
+    elif reference_code:
+        candidate_summary = _summarize_clingo_result(run_clingo_program(asp_code))
+
+    reference_comparison = _compare_reference_to_candidate(reference_summary, candidate_summary)
+    if reference_comparison or reference_path:
+        semantic_json["reference"] = {
+            "path": str(reference_path) if reference_path else None,
+            "comparison": reference_comparison,
+        }
     return feedback, avg_score, avg_conf, semantic_json
+
+
+@lru_cache(maxsize=128)
+def _solve_reference(reference_code: str) -> dict[str, Any]:
+    return run_clingo_program(reference_code)
 
 
 def record_semantic_result(

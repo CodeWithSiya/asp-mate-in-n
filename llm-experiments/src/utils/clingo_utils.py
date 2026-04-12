@@ -35,9 +35,12 @@ def _convert_stats(stats: Any) -> Any:
         return stats
 
 
-def run_clingo_program(asp_code: str, board_facts: str) -> dict[str, Any]:
-    """Concatenate ASP with board facts and solve via Clingo's Python API."""
-    combined = board_facts.strip() + "\n\n" + asp_code.strip()
+def run_clingo_program(asp_code: str, board_facts: str | None = None) -> dict[str, Any]:
+    """Concatenate ASP with optional board facts before invoking Clingo."""
+    if board_facts and board_facts.strip():
+        combined = board_facts.strip() + "\n\n" + asp_code.strip()
+    else:
+        combined = asp_code.strip()
     start = time.monotonic()
     stdout_buf = io.StringIO()
     stderr_buf = io.StringIO()

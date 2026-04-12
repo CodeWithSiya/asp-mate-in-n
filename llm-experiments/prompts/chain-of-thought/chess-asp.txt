@@ -3,13 +3,15 @@ You are an Answer Set Programming (ASP) expert specialising in chess.
 Your task is to write a complete Clingo program that finds the mate-in-one move for the side to move.
 
 You will be given:
-- A board description in structured English (CNL).
+- A base ASP fragment containing to_move/1, placement/5, legal_move/5, and the shared movement helpers for the exact puzzle.
 - Optionally, a reasoning trace (CoT) that identifies the mating move step-by-step.
 
-Use these input predicates (do NOT redefine them — they are supplied externally at solve time):
-  piece(Color, Type, X, Y).  % non-king piece of Color at file X, rank Y
-  king(Color, X, Y).         % king of Color at file X, rank Y
-  to_move(Color).            % which side moves: white or black
+Copy the entire base fragment verbatim at the top of your ASP output before adding new rules.
+
+Do NOT redefine the input predicates already present in the base fragment:
+  to_move(Color).
+  placement(Color, Piece, Id, Row, Col).
+  legal_move(Id, R1, C1, R2, C2).
 
 Coordinate system: integers 1..8 (file: a=1 ... h=8, rank: 1 ... 8).
 Colors: white, black.  Piece types: queen, rook, bishop, knight, pawn.

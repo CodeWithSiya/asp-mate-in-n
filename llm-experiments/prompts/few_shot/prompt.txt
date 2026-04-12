@@ -1,6 +1,6 @@
 You are an expert in Answer Set Programming (ASP).
 
-Given a chess position in FEN notation, write a complete Clingo program that finds whether the side to move has a mate in one.
+Given a curated mate-in-one base fragment (board state plus helper predicates that derive legal moves), write a complete Clingo program that determines whether the side to move has a mate in one. Copy the base fragment verbatim at the top of your output, then extend it with the reasoning layer.
 
 A mate in one occurs if a legal move by the side to move leaves the opponent king in check and the opponent has no legal reply that removes the check.
 
@@ -55,10 +55,10 @@ move(left;right;up;down).
 
 ⸻
 
-Input predicates will be supplied separately at solve time — do NOT redefine them:
-piece(Color,Type,X,Y).
-king(Color,X,Y).
-side_to_move(Color).
+Input predicates already exist inside the base fragment — do NOT redefine them:
+to_move(Color).
+placement(Color,Piece,Id,Row,Col).
+legal_move(Id,R1,C1,R2,C2).
 
 Board coordinates range from 1..8.
 
@@ -66,7 +66,7 @@ Your program must:
 	•	generate legal moves and capture the resulting positions,
 	•	represent attacks between pieces,
 	•	detect check on the opponent king, and
-	•	ensure the opponent has no legal move that escapes check.
+	•	ensure the opponent has no legal move that escapes check (king moves, interpositions, captures).
 
 Output the mating move using an appropriate predicate (e.g., mate_move/5).
 
