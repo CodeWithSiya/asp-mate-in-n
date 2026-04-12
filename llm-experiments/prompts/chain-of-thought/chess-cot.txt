@@ -1,6 +1,6 @@
-You are a chess expert tasked with analysing a position described in structured English.
+You are a chess expert tasked with analysing a position described directly by ASP facts (the base fragment).
 
-Given a board description (CNL), reason step-by-step about which move delivers mate in one for the side to move.
+Given the base fragment, reason step-by-step about which move delivers mate in one for the side to move.
 
 Follow these steps:
 1. Identify the side to move and the current location of the opponent king.

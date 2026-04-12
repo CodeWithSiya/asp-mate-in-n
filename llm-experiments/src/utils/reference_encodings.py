@@ -14,8 +14,8 @@ DEFAULT_REFERENCE_ROOT = (Path(__file__).resolve().parents[2] / ".." / "encoding
 # corresponding manual .lp file names. Extend this dict whenever new reference
 # encodings become available.
 BOARD_REFERENCE_MAP: dict[str, str] = {
-    # Example mapping: "manual_easy": "mate-in-n-easy.lp",
-    # "manual_medium": "mate-in-n-medium.lp",
+    "mate_in_one_easy": "mate-in-one-easy.lp",
+    "mate_in_one_medium": "mate-in-one-medium.lp",
 }
 
 

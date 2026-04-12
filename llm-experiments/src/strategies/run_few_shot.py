@@ -15,27 +15,26 @@ def generate_few_shot_program(
     client,
     model: str,
     prompt_template: str,
-    board_facts: str,
+    base_program: str,
     board_description: str | None = None,
     max_new_tokens: int,
     temperature: float,
     usage: TokenUsage,
-    syntax_guardrail: str | None = None,
 ) -> str:
     prompt_body = prompt_template.rstrip()
     if board_description:
         prompt_body += "\n\nBoard description (CNL summary):\n" + board_description.strip() + "\n"
-    prompt_body += "\nBoard facts (ASP input):\n" + board_facts.strip() + "\n"
+    prompt_body += "\nBase ASP fragment (copy verbatim before extending):\n" + base_program.strip() + "\n"
     prompt_body += (
-        "\nGenerate only the ASP program that determines if there is a mate-in-one for"
-        " this exact position. You may hard-code the provided coordinates and"
-        " pieces; do not attempt to write a fully generic chess engine."
+        "\nExtend the fragment so the full program:\n"
+        "  • selects exactly one legal white move using the provided legal_move/5 atoms;\n"
+        "  • derives new_placement/3 for the board after that move;\n"
+        "  • computes which squares white attacks after moving;\n"
+        "  • checks if the black king is threatened;\n"
+        "  • rules out escapes by analysing every black king move as well as blocks or captures;\n"
+        "  • keeps only moves that yield checkmate and outputs mate_move/6."
+        "\nOutput the entire ASP program (base fragment + reasoning) with no Markdown."
     )
-    if syntax_guardrail:
-        prompt_body += (
-            "\n\nSyntax Guardrail (Clingo constraints):\n"
-            f"{syntax_guardrail.strip()}\n"
-        )
     system_prompt = "You are an expert in Answer Set Programming and chess."
     return llm_chat(
         client,
@@ -59,21 +58,19 @@ def run_few_shot_on_boards(
     prompt_file: Path,
     max_new_tokens: int,
     temperature: float,
-    syntax_guardrail: str | None = None,
 ) -> None:
 
-    def _generate(spec: BoardSpec, usage: TokenUsage, board_facts: str) -> StrategyResult:
+    def _generate(spec: BoardSpec, usage: TokenUsage, base_program: str) -> StrategyResult:
         board_description = board_spec_to_cnl(spec)
         asp_code = generate_few_shot_program(
             client=client,
             model=model,
             prompt_template=prompt_template,
-            board_facts=board_facts,
+            base_program=base_program,
             board_description=board_description,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             usage=usage,
-            syntax_guardrail=syntax_guardrail,
         )
         return StrategyResult(
             asp_code=asp_code,

@@ -2,14 +2,20 @@ You are an Answer Set Programming (ASP) expert specialising in chess.
 
 Given a chess position, write a complete Clingo program that finds the mate-in-one move for the side to move.
 
-Input predicates (supplied at solve time — do NOT redefine them):
-  piece(Color, Type, X, Y).   % non-king piece of Color at file X, rank Y
-  king(Color, X, Y).          % king of Color at file X, rank Y
-  to_move(Color).             % which side must move
+You will be given a base ASP fragment that already specifies:
+  • to_move(Color) for the side to move.
+  • placement/5 facts for every piece on the board.
+  • helper predicates (queen_moves/4, king_moves/4, blocked/5, etc.) culminating in legal_move/5 rules for every white move that is legal before the reasoning layer kicks in.
+
+Copy the entire base fragment verbatim at the top of your program, then extend it.
+
+Input predicates already defined inside the base fragment — do NOT redefine them:
+  to_move(Color).
+  placement(Color, Piece, Id, Row, Col).
+  legal_move(Id, R1, C1, R2, C2).
 
 Coordinate system: integers 1..8 (file a=1 ... h=8, rank 1=rank-1 ... 8=rank-8).
-Colors: white, black.
-Piece types: queen, rook, bishop, knight, pawn.
+Colors: white, black. Piece types: queen, rook, bishop, knight, pawn.
 
 A move is a mate-in-one if and only if:
   1. The moving piece has a legal move to the target square (respects piece movement rules).
@@ -17,12 +23,10 @@ A move is a mate-in-one if and only if:
   3. After the move, the opponent has no legal move that escapes check.
 
 Guidance:
-- Define opponent(white, black) and opponent(black, white).
-- Encode movement rules as candidate_move(Color, Type, FX, FY, TX, TY).
-- For sliding pieces (queen, rook, bishop), a move is only legal if the path is clear.
-- A piece can capture an opponent piece on the target square.
-- Detect check: the move places the opponent king on a square attacked by the mover.
-- Detect escape: the opponent can escape if any of their moves removes check.
+- Use the provided legal_move/5 rules to drive a `1 { choose_move(...) } 1` choice rule.
+- Derive new_placement/3 so you can reason about the board after the chosen move.
+- Compute which squares the opponent king could move to using the existing king_moves/4 helper, and determine whether each escape is attacked or occupied.
+- Detect check and ensure every escape attempt fails (king moves, interpositions, captures).
 
 Output the mating move as:
   mate_move(Color, Type, FromX, FromY, ToX, ToY).

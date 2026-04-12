@@ -1,4 +1,4 @@
-"""Zero-shot strategy helpers (FEN → ASP in one hop)."""
+"""Zero-shot strategy helpers (base fragment → full ASP)."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,15 +15,35 @@ def generate_zero_shot_asp(
     client,
     model: str,
     system_prompt: str,
-    fen_text: str,
+    base_program: str,
     max_new_tokens: int,
     temperature: float,
     usage: TokenUsage | None = None,
     feedback: str = "",
     previous_asp: str | None = None,
-    syntax_guardrail: str | None = None,
 ) -> str:
-    user_prompt = f"FEN: {fen_text}\n\nGenerate only the ASP program."
+    header = (
+        "You are given a curated mate-in-one base program fragment. It already"
+        " encodes the board state (placement/5), shared movement helpers"
+        " (queen_moves/4, king_moves/4, blocked/5, etc.) that derive legal_move/5,"
+        " plus to_move/1. Copy it verbatim at the top of your answer, then extend"
+        " it so the final ASP selects exactly one white move, derives the"
+        " post-move board, detects threats/check, evaluates every escape (king"
+        " move, block, capture), and rules out moves that fail to deliver"
+        " checkmate."
+    )
+    base_section = "Base program fragment (copy exactly before extending):\n" + base_program.strip()
+    checklist = (
+        "Your completion must implement:\n"
+        "1. Choice rule that selects exactly one legal white move.\n"
+        "2. new_placement rules describing the board after that move.\n"
+        "3. Threat detection predicates showing which squares white attacks.\n"
+        "4. Check detection for the black king.\n"
+        "5. Escape detection: opponent king moves, interpositions, captures.\n"
+        "6. Checkmate constraint rejecting moves unless they trap the king.\n"
+        "Output the FULL program (base fragment + reasoning)."
+    )
+    user_prompt = "\n\n".join([header, base_section, checklist])
     if feedback.strip():
         user_prompt += (
             "\n\nPrevious solver feedback:\n"
@@ -35,11 +55,6 @@ def generate_zero_shot_asp(
             "\n\nPrevious ASP attempt:\n```asp\n"
             f"{previous_asp.strip()}\n"
             "```"
-        )
-    if syntax_guardrail:
-        user_prompt += (
-            "\n\nSyntax Guardrail (Clingo constraints):\n"
-            f"{syntax_guardrail.strip()}\n"
         )
     return llm_chat(
         client,
@@ -63,7 +78,6 @@ def run_zero_shot_on_boards(
     max_new_tokens: int,
     temperature: float,
     prompt_file: Path,
-    syntax_guardrail: str | None = None,
 ) -> None:
 
     def _generate(spec: BoardSpec, usage: TokenUsage, board_facts: str) -> StrategyResult:  # noqa: ARG001
@@ -71,11 +85,10 @@ def run_zero_shot_on_boards(
             client=client,
             model=model,
             system_prompt=system_prompt,
-            fen_text=spec.fen_text,
+            base_program=board_facts,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             usage=usage,
-            syntax_guardrail=syntax_guardrail,
         )
         return StrategyResult(
             asp_code=asp_code,

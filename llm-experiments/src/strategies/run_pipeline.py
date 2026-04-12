@@ -72,7 +72,6 @@ def run_pipeline(
     max_new_tokens: int,
     temperature: float,
     clingo_retries: int,
-    guardrail_text: str | None,
 ) -> None:
     print(f"variant={variant!r}  model={model}  boards={len(specs)}")
 
@@ -85,7 +84,8 @@ def run_pipeline(
         print(f"\n[{board_id}]")
         usage = TokenUsage()
 
-        board_facts = board_spec_facts_text(spec)
+        base_fragment = board_spec_facts_text(spec)
+        (out_dir / "base.lp").write_text(base_fragment)
         expected = spec.expected_mate
         cnl_text = ""
         cot_text = ""
@@ -159,18 +159,17 @@ def run_pipeline(
 
         for attempt_idx in range(1, max_attempts + 1):
             if variant == "zero_shot":
-                print(f"  Stage 3: FEN → ASP (attempt {attempt_idx}/{max_attempts})")
+                print(f"  Stage 3: Base fragment → ASP (attempt {attempt_idx}/{max_attempts})")
                 asp_code = generate_zero_shot_asp(
                     client=client,
                     model=model,
                     system_prompt=zero_shot_system,
-                    fen_text=spec.fen_text,
+                    base_program=base_fragment,
                     max_new_tokens=max_new_tokens,
                     temperature=temperature,
                     usage=usage,
                     feedback=feedback,
                     previous_asp=prev_asp,
-                    syntax_guardrail=guardrail_text,
                 )
             else:
                 print(f"  Stage 3: CNL → ASP (attempt {attempt_idx}/{max_attempts})")
@@ -180,13 +179,13 @@ def run_pipeline(
                     instruction=asp_instruction,
                     context_label="Board description (CNL)",
                     context_text=cnl_text,
+                    base_program=base_fragment,
                     cot_text=cot_text,
                     max_new_tokens=max_new_tokens,
                     temperature=temperature,
                     usage=usage,
                     feedback=feedback,
                     previous_asp=prev_asp,
-                    syntax_guardrail=guardrail_text,
                 )
 
             attempt_asp_path = out_dir / f"asp_attempt{attempt_idx}.lp"
@@ -194,7 +193,7 @@ def run_pipeline(
             prev_asp = asp_code
 
             print(f"  Stage 4: Clingo solve (attempt {attempt_idx}/{max_attempts})")
-            last_result = run_clingo_program(asp_code, board_facts)
+            last_result = run_clingo_program(asp_code)
             attempt_clingo_path = out_dir / f"clingo_models_attempt{attempt_idx}.txt"
             write_clingo_output(last_result, attempt_clingo_path)
 
@@ -223,11 +222,6 @@ def run_pipeline(
                 break
 
             feedback = _build_feedback_message(last_result, attempt_idx)
-            if guardrail_text:
-                feedback = (
-                    f"{feedback}\n\nSyntax Guardrail (Clingo constraints):\n"
-                    f"{guardrail_text.strip()}\n"
-                )
             print(f"    ↻ retrying (status={attempt_status})")
 
         asp_gen_time = round(time.monotonic() - asp_gen_start, 4)
@@ -238,7 +232,7 @@ def run_pipeline(
         status = _clingo_status(last_result)
 
         print("  Stage 5: Semantic validation")
-        spec_text = board_facts
+        spec_text = base_fragment
         sem_start = time.monotonic()
         sem_feedback, sem_score, sem_conf, semantic_json = semantic_validate(
             client,
@@ -272,7 +266,7 @@ def run_pipeline(
             "zero_shot_prompt": str(zero_shot_prompt_path) if variant == "zero_shot" else None,
             "cot_prompt": str(cot_prompt_path) if variant in {"cnl_cot", "cot_only"} else None,
             "asp_prompt": str(asp_prompt_path) if variant in {"cnl_only", "cnl_cot"} else None,
-            "fen_file": str(spec.fen_path),
+            "base_file": str(spec.base_path),
             "expected_mate": expected,
             "status": status,
             "has_model": last_result["total_models"] > 0,

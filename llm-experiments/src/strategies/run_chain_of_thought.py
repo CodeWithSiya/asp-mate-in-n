@@ -41,34 +41,30 @@ def generate_cot_asp(
     instruction: str,
     context_label: str,
     context_text: str,
+    base_program: str,
     cot_text: str,
     max_new_tokens: int,
     temperature: float,
     usage: TokenUsage | None = None,
     feedback: str = "",
     previous_asp: str | None = None,
-    syntax_guardrail: str | None = None,
 ) -> str:
-    user_content = f"{context_label}:\n{context_text}"
+    base_section = "Base ASP fragment (copy verbatim before extending):\n" + base_program.strip()
+    parts: list[str] = []
+    if context_text.strip():
+        label = context_label or "Context"
+        parts.append(f"{label}:\n{context_text.strip()}")
+    parts.append(base_section)
+    user_content = "\n\n".join(parts)
     if cot_text:
         user_content += f"\n\nReasoning trace (CoT):\n{cot_text}"
     user_content += "\n\nNow generate only the ASP program."
-    if syntax_guardrail:
-        user_content += (
-            "\n\nSyntax Guardrail (Clingo constraints):\n"
-            f"{syntax_guardrail.strip()}\n"
-        )
     if feedback.strip():
         user_content += (
             "\n\nPrevious solver feedback:\n"
             f"{feedback.strip()}\n"
             "Revise the ASP to address these issues."
         )
-        if syntax_guardrail:
-            user_content += (
-                "\n\nSyntax Guardrail Reminder:\n"
-                f"{syntax_guardrail.strip()}\n"
-            )
     if previous_asp:
         user_content += (
             "\n\nPrevious ASP attempt:\n```asp\n"
@@ -99,17 +95,16 @@ def run_chain_of_thought_on_boards(
     asp_prompt_path: Path,
     max_new_tokens: int,
     temperature: float,
-    syntax_guardrail: str | None = None,
 ) -> None:
 
-    def _generate(spec: BoardSpec, usage: TokenUsage, board_facts: str) -> StrategyResult:
-        context_label = "Board facts (ASP input)"
+    def _generate(spec: BoardSpec, usage: TokenUsage, base_program: str) -> StrategyResult:
+        context_label = "Base fragment (ASP facts)"
         cot_text = generate_cot_trace(
             client=client,
             model=model,
             instruction=cot_instruction,
             context_label=context_label,
-            context_text=board_facts,
+            context_text=base_program,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             usage=usage,
@@ -119,13 +114,13 @@ def run_chain_of_thought_on_boards(
             model=model,
             instruction=asp_instruction,
             context_label=context_label,
-            context_text=board_facts,
+            context_text="",
+            base_program=base_program,
             cot_text=cot_text,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             usage=usage,
-            syntax_guardrail=syntax_guardrail,
-        )
+    )
         return StrategyResult(
             asp_code=asp_code,
             artifacts={"cot.txt": cot_text},

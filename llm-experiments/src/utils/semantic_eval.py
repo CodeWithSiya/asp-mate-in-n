@@ -183,12 +183,12 @@ def semantic_validate(
 
     reference_summary = None
     candidate_summary = None
-    if reference_code and spec_text:
-        reference_summary = _summarize_clingo_result(_solve_reference(reference_code, spec_text))
+    if reference_code:
+        reference_summary = _summarize_clingo_result(_solve_reference(reference_code))
     if candidate_clingo is not None:
         candidate_summary = _summarize_clingo_result(candidate_clingo)
-    elif reference_code and spec_text:
-        candidate_summary = _summarize_clingo_result(run_clingo_program(asp_code, spec_text))
+    elif reference_code:
+        candidate_summary = _summarize_clingo_result(run_clingo_program(asp_code))
 
     reference_comparison = _compare_reference_to_candidate(reference_summary, candidate_summary)
     if reference_comparison or reference_path:
@@ -200,8 +200,8 @@ def semantic_validate(
 
 
 @lru_cache(maxsize=128)
-def _solve_reference(reference_code: str, spec_text: str) -> dict[str, Any]:
-    return run_clingo_program(reference_code, spec_text)
+def _solve_reference(reference_code: str) -> dict[str, Any]:
+    return run_clingo_program(reference_code)
 
 
 def record_semantic_result(

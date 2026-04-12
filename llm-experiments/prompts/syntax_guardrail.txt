@@ -1,5 +1,0 @@
-Follow these Clingo syntax constraints whenever you emit ASP:
-- Use Clingo comparison operators (`=`, `<`, `>`, `<=`, `>=`). Do not output Prolog-style tokens such as `==`, `=<`, `=>`, or `=/=`. Equality tests are written as `X = Y`.
-- Never place disjunctions like `(cond1 ; cond2)` inside rule bodies. Split them into separate rules or reuse helper predicates (e.g., `not_same_square(FX,FY,TX,TY)`).
-- When you need reusable arithmetic helpers (e.g., coordinate domains, direction tables), declare them explicitly at the top of the program so every variable appears in a positive literal before it is compared or used in arithmetic.
-- Emit only Clingo-safe atoms. Avoid Prolog-only constructs such as `abs()`, pipes for absolute value (`|X|`), or chained comparisons (`FX != TX, FY`). Break comparisons into single binary relations instead.

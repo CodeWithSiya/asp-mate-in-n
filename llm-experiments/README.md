@@ -2,9 +2,13 @@
 
 This workspace houses a trimmed-down reproduction of the SchASPLM workflow for
 studying whether Anthropic Claude can synthesize Answer Set Programs (ASPs) that
-detect mate-in-one moves from Forsyth–Edwards Notation (FEN) boards. The scripts
-convert FENs into ASP facts, run several prompting strategies, solve the
-resulting programs with Clingo, and record semantic validation results.
+detect mate-in-one moves from curated base fragments derived from our manual
+encodings. Each base fragment already contains the board state, the reusable
+move-generation predicates, and the side-to-move indicator; the strategies
+prompt Claude to *complete* the reasoning layer rather than regenerate chess
+fundamentals. The
+generated programs are solved with Clingo and scored via automated semantic
+validation.
 
 ## Anthropic Setup
 
@@ -25,51 +29,52 @@ resulting programs with Clingo, and record semantic validation results.
 
 ## Layout
 
-- `data/boards/*.fen` – curated mate-in-one boards. The first non-comment line
-  must be the raw FEN; subsequent lines starting with `#` capture metadata such
-  as the expected mate.
+- `data/base/*_base.lp` – curated base fragments for each manual puzzle. Every
+  file contains the board state facts (`placement/5`), the rules that derive
+  legal moves (`legal_move/5`), plus `to_move/1`. These fragments are the
+  context we hand to Claude so it can focus solely on the mate-in-one reasoning
+  layer (they no longer enumerate `king_can_go/2` or other escape lists).
 - `outputs/<board-id>/<strategy>/` – artefacts for every run (generated ASP,
   CNL/CoT traces when applicable, solver logs, metadata). Created by the
   strategy runners and by `src/tools/run_experiment.py`.
 - `results/semantic/` – JSON verdicts plus `summary.md`, updated automatically
   whenever a strategy finishes semantic validation.
-- `prompts/` – editable prompt templates for zero-shot, few-shot, chain of
-  thought, and the shared `syntax_guardrail.txt` snippet.
+- `prompts/` – editable prompt templates for zero-shot, few-shot, and
+  chain-of-thought strategies.
 - `src/tools/run_experiment.py` – orchestrator that runs zero-shot, few-shot,
   chain-of-thought, and pipeline strategies on the same board set.
 - `src/strategies/*.py` – strategy helpers consumed by
   `src/tools/run_experiment.py` plus the configurable pipeline script (which
   remains invokable on its own).
-- `src/tools/run_clingo.py` – CLI wrapper that converts a FEN to facts on the
-  fly before invoking the `clingo` binary.
-- `src/utils/fen_to_board_lp.py` – utility to inspect the facts produced for a
-  board (also used internally by the runners).
+- `src/tools/run_clingo.py` – CLI wrapper to run Clingo on a self-contained ASP
+  artifact (already includes its base fragment).
 
-## Preparing board configurations
+## Preparing base fragments
 
-1. Drop a new FEN file under `data/boards/`. Example:
-   ```
-   6k1/5ppp/8/8/8/8/5PPP/6KQ w - - 0 1
-   # Expected mates: Qh7#
-   ```
-2. Run `python src/utils/fen_to_board_lp.py --fen-file data/boards/<name>.fen \
-   --output data/boards/board_conversion.lp` whenever you want to inspect the
-   derived ASP facts manually. The helper overwrites `board_conversion.lp` every
-   time, so there is never a pile-up of `.lp` fact files.
-3. Every CLI accepts either individual `.fen` files or directories; internally
-   `collect_board_specs` walks the directories, deduplicates files, parses the
-   comments for `Expected` metadata, and exposes the facts plus a controlled
-   natural-language (CNL) description to downstream strategies.
+Manual encodings live in the sibling repository `../encoding/src/`. For every
+puzzle you plan to evaluate, extract the static board facts into
+`data/base/<board>_base.lp`, and make sure the shared helper predicates still
+match the pieces present in that position. Those `.lp` fragments are treated as
+immutable context and are embedded verbatim into every LLM prompt.
+
+When adding a new puzzle:
+
+1. Copy `data/base/mate_in_one_easy_base.lp` (or any existing base file) as a
+   template.
+2. Update the `placement/5` facts using the manual encoding.
+3. Update/extend the `legal_move/5` helper rules if the new puzzle introduces
+   pieces or movement patterns not already covered.
+4. Commit the finished fragment so strategy runners can mount it when invoking
+   Claude.
 
 ## Running Anthropic strategies
 
 ### Run every strategy in one pass
 
 ```bash
-python src/tools/run_experiment.py data/boards/sample_mate_in_one.fen \
-  data/boards/mate_kf6_qd7.fen \
+python src/tools/run_experiment.py data/base/mate_in_one_easy_base.lp \
+  data/base/mate_in_one_medium_base.lp \
   --output-dir outputs \
-  --syntax-guardrail \
   --strategies zero_shot few_shot chain_of_thought pipeline
 ```
 
@@ -81,8 +86,6 @@ Key flags:
   you swap prompt files without editing the code.
 - `--max-new-tokens`, `--temperature`, and `--model-id` are forwarded to every
   LLM call. If `--model-id` is omitted the resolved model is printed.
-- `--syntax-guardrail` appends `prompts/syntax_guardrail.txt` to every ASP
-  generation step (all strategy runners support the same flag).
 - `--clingo-retries N` controls how many times the pipeline will regenerate an
   ASP when the solver fails (defaults to two retries, i.e., up to three
   attempts per board).
@@ -95,31 +98,33 @@ strategy, so each board winds up with `asp.lp`, `clingo_models.txt`, and
 
 Use `--strategies` with `run_experiment.py` to focus on one variant at a time.
 
-- **Zero-shot** (FEN → ASP):
+- **Zero-shot** (base fragment → ASP in one hop):
   ```bash
-  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
-    --strategies zero_shot --syntax-guardrail
+  python src/tools/run_experiment.py data/base/mate_in_one_easy_base.lp \
+    --strategies zero_shot
   ```
-  Zero-shot deliberately operates on raw FEN strings to keep a baseline that
-  skips all intermediate representations.
-- **Few-shot** (facts + optional CNL summary → ASP):
+  Claude receives the base fragment verbatim and must return the full program
+  (fragment copied first, reasoning appended afterwards).
+- **Few-shot** (few exemplars + base fragment + CNL summary):
   ```bash
-  python src/tools/run_experiment.py data/boards/*.fen \
+  python src/tools/run_experiment.py data/base/*.lp \
     --strategies few_shot --few-shot-prompt prompts/few_shot/prompt.txt
   ```
-  The prompt template still embeds both the ASP facts and a short CNL summary.
-- **Chain of thought** (ASP facts → CoT reasoning → ASP):
+  The prompt template appends both the CNL summary and the literal base
+  fragment before asking Claude to extend it.
+- **Chain of thought** (base fragment → CoT reasoning → ASP):
   ```bash
-  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
+  python src/tools/run_experiment.py data/base/mate_in_one_medium_base.lp \
     --strategies chain_of_thought --cot-prompt prompts/chain-of-thought/chess-cot.txt \
     --asp-prompt prompts/chain-of-thought/chess-asp.txt
   ```
-  The standalone CoT runner now reasons directly over the fact list; the CNL
-  stage lives exclusively inside the pipeline variant.
+  Stage 1 produces a natural-language reasoning trace directly from the base
+  fragment; Stage 2 copies the fragment and emits the completed ASP while
+  consulting the CoT.
 - **Pipeline** (configurable multi-stage flow):
   ```bash
-  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
-    --strategies pipeline --clingo-retries 2 --syntax-guardrail
+  python src/tools/run_experiment.py data/base/mate_in_one_easy_base.lp \
+    --strategies pipeline --clingo-retries 2
   ```
   Supported variants remain `zero_shot`, `cnl_only`, `cot_only`, `cnl_cot`
   (orchestrator default). The pipeline still performs the full CNL → CoT → ASP
@@ -164,20 +169,14 @@ clingo --version
 
 ## Running Clingo from Python
 
-Use the wrapper to combine a generated ASP with a board on the fly:
+Use the helper when you want to sanity-check a generated ASP locally (each ASP
+already embeds its base fragment):
 
 ```bash
 python src/tools/run_clingo.py \
-  outputs/mate_kf6_qd7/few_shot/asp.lp \
-  --fen-board data/boards/mate_kf6_qd7.fen \
-  --output outputs/mate_kf6_qd7/few_shot/clingo_manual.txt
+  outputs/mate_in_one_easy/zero_shot/asp.lp \
+  --output outputs/mate_in_one_easy/zero_shot/clingo_manual.txt
 ```
 
-The script converts the FEN into `data/boards/board_conversion.lp` (overwriting
-it each time), feeds the resulting facts plus the ASP file into the same
-`run_clingo_program` helper used by every strategy, and writes a
-`clingo_manual_run.txt` (or the provided `--output` path) containing stdout,
-statistics, and solver verdicts.
-
-Because the tool calls the Python API directly, it picks up the same logging
-format and guardrails as the batched runners—no extra solver flags needed.
+The script simply feeds the file into the shared `run_clingo_program` helper and
+writes a transcript containing models, statistics, and solver logs.

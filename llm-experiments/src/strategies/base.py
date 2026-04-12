@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable
 import datetime
 import json
 
-from utils.board_utils import BoardSpec, board_spec_facts_text
+from utils.base_programs import BaseSpec, base_spec_facts_text
 from utils.clingo_utils import run_clingo_program, write_clingo_output
 from utils.llm_utils import TokenUsage
 from utils.reference_encodings import load_reference_program
@@ -23,12 +23,12 @@ class StrategyResult:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-GenerateFn = Callable[[BoardSpec, TokenUsage, str], StrategyResult]
+GenerateFn = Callable[[BaseSpec, TokenUsage, str], StrategyResult]
 
 
 def run_board_strategy(
     *,
-    specs: Iterable[BoardSpec],
+    specs: Iterable[BaseSpec],
     output_root: Path,
     strategy_name: str,
     subdir_name: str,
@@ -44,18 +44,19 @@ def run_board_strategy(
         board_dir = output_root / board_id / subdir_name
         board_dir.mkdir(parents=True, exist_ok=True)
 
-        board_facts_text = board_spec_facts_text(spec)
+        base_program_text = base_spec_facts_text(spec)
         reference_code, reference_path = load_reference_program(board_id)
 
-        result = generate_fn(spec, usage, board_facts_text)
+        result = generate_fn(spec, usage, base_program_text)
 
         asp_path = board_dir / "asp.lp"
         asp_path.write_text(result.asp_code)
+        (board_dir / "base.lp").write_text(base_program_text)
 
         for name, content in result.artifacts.items():
             (board_dir / name).write_text(content)
 
-        clingo_result = run_clingo_program(result.asp_code, board_facts_text)
+        clingo_result = run_clingo_program(result.asp_code)
         write_clingo_output(clingo_result, board_dir / "clingo_models.txt")
         if not clingo_result["parsed"]:
             status = "parse_error"
@@ -68,7 +69,7 @@ def run_board_strategy(
             client,
             model=model,
             asp_code=result.asp_code,
-            spec_text=board_facts_text,
+            spec_text=base_program_text,
             samples=3,
             temperature=0.1,
             reference_code=reference_code,
@@ -81,7 +82,7 @@ def run_board_strategy(
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "variant": strategy_name,
             "model": model,
-            "fen_file": str(spec.fen_path),
+            "base_file": str(spec.base_path),
             "expected_mate": spec.expected_mate,
             "token_usage": {
                 "prompt_tokens": usage.prompt_tokens,
