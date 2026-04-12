@@ -27,7 +27,7 @@ from strategies.run_chain_of_thought import (
     ASP_PROMPT as DEFAULT_ASP_PROMPT,
     run_chain_of_thought_on_boards,
 )
-from strategies.run_pipeline import run_pipeline_with_args
+from strategies.run_pipeline import run_pipeline
 
 
 DEFAULT_STRATEGIES: Sequence[str] = (
@@ -138,7 +138,6 @@ def run_experiment(args: argparse.Namespace) -> None:
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             prompt_file=args.zero_shot_prompt,
-            run_clingo=True,
             syntax_guardrail=guardrail_text,
         )
 
@@ -154,7 +153,6 @@ def run_experiment(args: argparse.Namespace) -> None:
             prompt_file=args.few_shot_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            run_clingo=True,
             syntax_guardrail=guardrail_text,
         )
 
@@ -173,27 +171,31 @@ def run_experiment(args: argparse.Namespace) -> None:
             asp_prompt_path=args.asp_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            run_clingo=True,
             syntax_guardrail=guardrail_text,
         )
 
     if "pipeline" in selected:
         print("\n=== Pipeline strategy ===")
-        pipeline_args = argparse.Namespace(
-            inputs=args.inputs,
+        zero_shot_system = args.zero_shot_prompt.read_text()
+        cot_instruction = args.cot_prompt.read_text()
+        asp_instruction = args.asp_prompt.read_text()
+        run_pipeline(
+            specs,
+            output_root=args.output_dir,
+            client=client,
+            model=model_name,
+            zero_shot_system=zero_shot_system,
+            cot_instruction=cot_instruction,
+            asp_instruction=asp_instruction,
+            zero_shot_prompt_path=args.zero_shot_prompt,
+            cot_prompt_path=args.cot_prompt,
+            asp_prompt_path=args.asp_prompt,
             variant="cnl_cot",
-            zero_shot_prompt=args.zero_shot_prompt,
-            cot_prompt=args.cot_prompt,
-            asp_prompt=args.asp_prompt,
-            model_id=args.model_id,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            output_dir=args.output_dir,
             clingo_retries=args.clingo_retries,
-            syntax_guardrail=bool(guardrail_text),
-            syntax_guardrail_text=guardrail_text,
+            guardrail_text=guardrail_text,
         )
-        run_pipeline_with_args(pipeline_args)
 
     print("\nAll requested strategies completed.")
 

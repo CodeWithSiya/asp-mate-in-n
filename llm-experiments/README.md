@@ -37,8 +37,9 @@ resulting programs with Clingo, and record semantic validation results.
   thought, and the shared `syntax_guardrail.txt` snippet.
 - `src/tools/run_experiment.py` – orchestrator that runs zero-shot, few-shot,
   chain-of-thought, and pipeline strategies on the same board set.
-- `src/strategies/*.py` – standalone entry points for each prompting strategy
-  as well as the configurable pipeline variants.
+- `src/strategies/*.py` – strategy helpers consumed by
+  `src/tools/run_experiment.py` plus the configurable pipeline script (which
+  remains invokable on its own).
 - `src/tools/run_clingo.py` – CLI wrapper that converts a FEN to facts on the
   fly before invoking the `clingo` binary.
 - `src/utils/fen_to_board_lp.py` – utility to inspect the facts produced for a
@@ -92,31 +93,37 @@ strategy, so each board winds up with `asp.lp`, `clingo_models.txt`, and
 
 ### Run a single strategy
 
+Use `--strategies` with `run_experiment.py` to focus on one variant at a time.
+
 - **Zero-shot** (FEN → ASP):
   ```bash
-  python src/strategies/run_zero_shot.py data/boards/mate_kf6_qd7.fen \
-    --clingo --syntax-guardrail
+  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
+    --strategies zero_shot --syntax-guardrail
   ```
-  Add `--prompt-file` to point at an alternate template.
-- **Few-shot** (facts + CNL summary → ASP):
+  Zero-shot deliberately operates on raw FEN strings to keep a baseline that
+  skips all intermediate representations.
+- **Few-shot** (facts + optional CNL summary → ASP):
   ```bash
-  python src/strategies/run_few_shot.py data/boards/*.fen \
-    --clingo --prompt-file prompts/few_shot/prompt.txt
+  python src/tools/run_experiment.py data/boards/*.fen \
+    --strategies few_shot --few-shot-prompt prompts/few_shot/prompt.txt
   ```
-- **Chain of thought** (CNL → CoT → ASP):
+  The prompt template still embeds both the ASP facts and a short CNL summary.
+- **Chain of thought** (ASP facts → CoT reasoning → ASP):
   ```bash
-  python src/strategies/run_chain_of_thought.py data/boards/mate_kf6_qd7.fen \
-    --clingo --syntax-guardrail
+  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
+    --strategies chain_of_thought --cot-prompt prompts/chain-of-thought/chess-cot.txt \
+    --asp-prompt prompts/chain-of-thought/chess-asp.txt
   ```
-  Swap the reasoning or ASP instructions via `--cot-prompt` / `--asp-prompt`.
-- **Pipeline** (configurable variants):
+  The standalone CoT runner now reasons directly over the fact list; the CNL
+  stage lives exclusively inside the pipeline variant.
+- **Pipeline** (configurable multi-stage flow):
   ```bash
-  python src/strategies/run_pipeline.py data/boards/mate_kf6_qd7.fen \
-    --variant cnl_cot --clingo-retries 2 --syntax-guardrail
+  python src/tools/run_experiment.py data/boards/mate_kf6_qd7.fen \
+    --strategies pipeline --clingo-retries 2 --syntax-guardrail
   ```
-  Supported variants: `zero_shot`, `cnl_only`, `cot_only`, `cnl_cot` (default).
-  The pipeline always runs Clingo and semantic validation; retried attempts and
-  feedback loops are saved alongside the final artefacts.
+  Supported variants remain `zero_shot`, `cnl_only`, `cot_only`, `cnl_cot`
+  (orchestrator default). The pipeline still performs the full CNL → CoT → ASP
+  path (plus retries) and always runs Clingo plus semantic validation.
 
 ### Outputs and semantic scoring
 
@@ -163,13 +170,14 @@ Use the wrapper to combine a generated ASP with a board on the fly:
 python src/tools/run_clingo.py \
   outputs/mate_kf6_qd7/few_shot/asp.lp \
   --fen-board data/boards/mate_kf6_qd7.fen \
-  --stats
+  --output outputs/mate_kf6_qd7/few_shot/clingo_manual.txt
 ```
 
 The script converts the FEN into `data/boards/board_conversion.lp` (overwriting
-it each time), then invokes the `clingo` binary with sensible defaults
-(`--models 0`). Pass additional solver flags after `--`, for example
-`-- --time-limit=60 --threads=4`.
+it each time), feeds the resulting facts plus the ASP file into the same
+`run_clingo_program` helper used by every strategy, and writes a
+`clingo_manual_run.txt` (or the provided `--output` path) containing stdout,
+statistics, and solver verdicts.
 
-All runners also expose `--clingo-path` via this helper, so you can point to a
-non-standard installation by exporting `CLINGO_BIN=/full/path/to/clingo`.
+Because the tool calls the Python API directly, it picks up the same logging
+format and guardrails as the batched runners—no extra solver flags needed.

@@ -1,8 +1,0 @@
-No models found.
-parsing failed
-
-Clingo log messages:
-MessageCode.RuntimeError: <block>:210:23-24: error: syntax error, unexpected <
-
-MessageCode.RuntimeError: <block>:386:23-24: error: syntax error, unexpected <
-
