@@ -16,6 +16,7 @@ DEFAULT_REFERENCE_ROOT = (Path(__file__).resolve().parents[2] / ".." / "encoding
 BOARD_REFERENCE_MAP: dict[str, str] = {
     "mate_in_one_easy": "mate-in-one-easy.lp",
     "mate_in_one_medium": "mate-in-one-medium.lp",
+    "mate_in_one_hard": "mate-in-one-hard.lp",
 }
 
 
