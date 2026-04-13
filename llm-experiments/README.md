@@ -30,10 +30,12 @@ validation.
 ## Layout
 
 - `data/base/*_base.lp` – curated base fragments for each manual puzzle. Every
-  file contains the board state facts (`placement/5`), the rules that derive
-  legal moves (`legal_move/5`), plus `to_move/1`. These fragments are the
-  context we hand to Claude so it can focus solely on the mate-in-one reasoning
-  layer (they no longer enumerate `king_can_go/2` or other escape lists).
+  file contains the board state facts (`placement/5`), the reusable movement
+  logic, and `to_move/1`. These fragments form the context we hand to Claude so
+  it can focus solely on the mate-in-one reasoning layer. The repository ships
+  with three ready-made fragments: `mate_in_one_easy_base.lp`,
+  `mate_in_one_medium_base.lp`, and `mate_in_one_hard_base.lp` (all derived
+  directly from the manual encodings in `../encoding/src/`).
 - `outputs/<board-id>/<strategy>/` – artefacts for every run (generated ASP,
   CNL/CoT traces when applicable, solver logs, metadata). Created by the
   strategy runners and by `src/tools/run_experiment.py`.
@@ -74,6 +76,7 @@ When adding a new puzzle:
 ```bash
 python src/tools/run_experiment.py data/base/mate_in_one_easy_base.lp \
   data/base/mate_in_one_medium_base.lp \
+  data/base/mate_in_one_hard_base.lp \
   --output-dir outputs \
   --strategies zero_shot few_shot chain_of_thought pipeline
 ```
