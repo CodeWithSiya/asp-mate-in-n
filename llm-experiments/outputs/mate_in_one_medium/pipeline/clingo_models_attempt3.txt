@@ -1,0 +1,14 @@
+No models found.
+grounding stopped because of errors
+
+Clingo log messages:
+MessageCode.RuntimeError: <block>:336:1-339:32: error: unsafe variables in:
+  white_threatens_excl(R2,C2,ER,EC):-[#inc_base];king_moves(R1,C1,R2,C2);new_placement(wk,R1,C1);R1!=ER.
+<block>:336:34-36: note: 'EC' is unsafe
+<block>:336:30-32: note: 'ER' is unsafe
+
+MessageCode.RuntimeError: <block>:341:1-344:32: error: unsafe variables in:
+  white_threatens_excl(R2,C2,ER,EC):-[#inc_base];king_moves(R1,C1,R2,C2);new_placement(wk,R1,C1);C1!=EC.
+<block>:341:34-36: note: 'EC' is unsafe
+<block>:341:30-32: note: 'ER' is unsafe
+

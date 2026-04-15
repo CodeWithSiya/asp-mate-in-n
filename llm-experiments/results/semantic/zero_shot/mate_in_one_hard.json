@@ -1,0 +1,39 @@
+{
+  "board": "mate_in_one_hard",
+  "strategy": "zero_shot",
+  "model": "claude-sonnet-4-6",
+  "timestamp": "2026-04-14T10:06:48.883136+00:00",
+  "average_score": 0.45,
+  "average_confidence": 0.75,
+  "feedback": "Verdicts: ['INVALID', 'INVALID', 'INVALID'] | avg_score=0.450 | avg_conf=0.75",
+  "semantic": {
+    "average_score": 0.45,
+    "average_confidence": 0.75,
+    "verdicts": [
+      "INVALID",
+      "INVALID",
+      "INVALID"
+    ],
+    "reasons": [
+      "The candidate program attempts to solve the mate-in-one problem but has several significant issues compared to the reference: (1) It uses 'choose_move' instead of 'move' as the reference does, and defines its own new_placement logic that partially duplicates the reference but with subtle differences - notably it separately handles white and black pieces in new_placement rather than using a unified 'not move/not captured' approach. (2) The black escape detection is substantially different and weaker than the reference. The reference uses a comprehensive can_escape predicate covering king moves, blocking, and capturing for each piece type individually with proper legal move checks. The candidate uses a simplified 'black_piece_can_reach' that does not properly use legal_pawn_move/legal_rook_move etc. with the 'after' state, and the blocking check uses 'blocked(after,...)' rather than the reference's approach. (3) The candidate's 'capture_leaves_bk_in_check' predicate is logically broken - it references an unbound variable 'ID' in the body without proper binding, making it unreliable. (4) The double-check handling is an approximation that may miss cases. (5) The candidate does not use the 'threaten' predicate from the reference for check detection, instead defining its own 'white_piece_attacks_sq' and 'checking_piece' predicates, which may not correctly account for blocking after the move. (6) The output predicate is mate_move/6 which matches the required schema. (7) The 'white_king_threatens_after' predicate is defined after its use in 'bk_can_move_to', which may cause issues. Overall the approach is partially correct but the escape detection logic is significantly less robust than the reference, likely producing incorrect results for this specific board position.",
+      "The candidate program attempts to solve the mate-in-one problem but has several significant issues compared to the reference: (1) It uses 'choose_move' instead of 'move' as the choice predicate, and outputs 'mate_move/6' instead of 'move/5' as the primary output predicate - the reference uses '#show move/5' while the candidate uses '#show mate_move/6', which is a different output format. (2) The candidate's escape detection logic is substantially different and weaker than the reference. The reference uses a comprehensive 'can_escape' predicate that checks king moves, blocking, and capturing using the 'threaten' predicate and 'on_attack_path'. The candidate uses a custom 'black_piece_can_reach' predicate and a simplified double-check heuristic that may miss or incorrectly handle escape scenarios. (3) The candidate's 'capture_leaves_bk_in_check' predicate is logically broken - it references an unbound variable 'ID' in the body without proper grounding. (4) The candidate does not use the 'threaten' predicate from the reference for check detection; instead it uses 'white_piece_attacks_sq' and 'checking_piece', which may not correctly account for blocking after the move. (5) The candidate's 'black_piece_can_reach' for pawns uses 'occupied(after,...)' but doesn't properly handle the 'before' state for pawn forward moves. (6) The 'interpose_sq' and 'between_on_line' logic partially duplicates 'on_attack_path' from the reference but may have correctness issues. (7) The candidate is missing the 'captured' predicate used in the reference for tracking piece removal. Overall the approach is partially correct but the escape detection is unreliable and the output predicate differs from the specification.",
+      "The candidate program attempts to solve the mate-in-one problem but diverges significantly from the reference in several critical ways: (1) It uses 'choose_move' instead of 'move' as the reference does, and outputs 'mate_move/6' instead of 'move/5' as the reference does \u2014 the required output predicate is mate_move(Color, Type, FromX, FromY, ToX, ToY) which the candidate does produce, so that part is acceptable. (2) The candidate's escape detection is substantially different and weaker than the reference. The reference uses a comprehensive 'can_escape' predicate covering king moves, blocking, and capturing by all piece types using the 'threaten' and 'on_attack_path' predicates. The candidate uses a custom 'black_has_escape' system with 'bk_can_move_to', 'black_can_capture_checker', and 'black_can_interpose', which has several issues: (a) The 'capture_leaves_bk_in_check' predicate is logically broken \u2014 it references an unbound variable 'ID' in the body without proper grounding; (b) The 'black_piece_can_reach' for pawns uses 'occupied(after,...)' but pawn captures need to check for white pieces specifically, not just any occupied square; (c) The interposition check 'interpose_leaves_bk_in_check' is referenced but never defined, causing potential grounding issues; (d) The 'black_can_capture_checker' uses 'not capture_leaves_bk_in_check' but that predicate is incorrectly defined; (e) The double-check logic is an approximation that may miss cases. (3) The candidate's 'new_placement' includes both white and black pieces (reference only includes white pieces and unmoved pieces), which could cause issues with the 'blocked' and 'occupied' predicates in the after-state. (4) The reference uses a constraint ':- not checkmate(black)' with a well-defined 'checkmate' predicate, while the candidate uses two separate constraints. Overall the approach is partially correct but has significant logical errors in the escape detection that would likely produce wrong results."
+    ],
+    "reference": {
+      "path": "/Users/nhliziyosibiya/Library/CloudStorage/OneDrive-UniversityofCapeTown/CSC4042Z ASP/Project/asp-mate-in-n/encoding/src/mate-in-one-hard.lp",
+      "comparison": {
+        "status": "candidate_parse_error",
+        "reference_models": [
+          [
+            "checkmate(black)",
+            "in_check(black)",
+            "move(wn2,6,5,5,3)"
+          ]
+        ],
+        "candidate_models": [],
+        "reference_total_models": 1,
+        "candidate_total_models": 0
+      }
+    }
+  }
+}

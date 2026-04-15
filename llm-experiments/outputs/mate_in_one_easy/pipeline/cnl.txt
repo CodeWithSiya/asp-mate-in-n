@@ -1,0 +1,5 @@
+White pieces: king wk on (8, 6), queen wq on (2, 7).
+Black pieces: king bk on (8, 8).
+Side to move: white.
+Base fragment includes helper rules that derive legal_move/5 for white.
+Task: extend this base program into a full mate-in-one solver for the given position.
