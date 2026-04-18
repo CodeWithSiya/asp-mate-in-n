@@ -1,0 +1,48 @@
+I need to find a mate-in-one for White.
+
+## Step 1: Identify the positions
+
+**White pieces:**
+- King: (8,7)
+- Rook: (8,4)
+- Pawns: wp1(6,8), wp2(7,7), wp3(7,6)
+
+**Black pieces:**
+- King: (1,7)
+- Pawns: bp1(2,6), bp2(2,7), bp3(2,8), bp4(4,1)
+- Rook: (7,2)
+- Bishop: (5,6)
+
+## Step 2: Analyze the Black King's position
+
+Black King is at (1,7). Its adjacent squares are:
+- (1,6), (1,8), (2,6), (2,7), (2,8) — but (2,6), (2,7), (2,8) are occupied by black pawns
+- (1,6) and (1,8) are potential escape squares
+
+## Step 3: Find checking moves for White
+
+**White Rook at (8,4):** Can move along column 4 or row 8. To check the black king at (1,7), the rook would need to reach row 1 or column 7.
+- Rook to (1,4): checks? No, king is at (1,7), not same row... wait, row 1 — rook at (1,4) would be on row 1 with king at (1,7). Is the path (8,4)→(1,4) clear? Check column 4: squares (7,4),(6,4),(5,4),(4,4),(3,4),(2,4),(1,4) — none occupied. Then from (1,4) to (1,7) along row 1 — is that a check? The rook at (1,4) attacks along row 1. King is at (1,7). Path from (1,4) to (1,7): squares (1,5),(1,6) must be clear — they are. So rook at (1,4) gives check.
+
+**Can Black escape?**
+- King at (1,7) can move to: (1,6), (1,8), (2,6)[black pawn], (2,7)[black pawn], (2,8)[black pawn]
+- So escape squares: (1,6) and (1,8)
+
+**Is (1,6) safe?** Rook at (1,4) attacks all of row 1, including (1,6). So (1,6) is attacked by the rook. Not safe.
+
+**Is (1,8) safe?** Rook at (1,4) attacks row 1, including (1,8). So (1,8) is also attacked. Not safe.
+
+**Can Black interpose or capture the rook?**
+- The rook is at (1,4). Black pieces that could capture it: black rook at (7,2) — can it reach (1,4)? It would need to move to row 1 or column 4. Black rook at (7,2) to (1,2) then... no, it needs to go to (1,4). Path (7,2)→(1,2) is vertical, then (1,2)→(1,4) is horizontal — that's two moves. In one move: (7,2) to (1,2) — not (1,4). Or (7,2) to (7,4) to... no, one move only.
+- Can black rook go to (1,4) directly? From (7,2): not same row or column as (1,4). No.
+- Can black bishop at (5,6) interpose? The check is along row 1 from (1,4) to (1,7). Interposing squares: (1,5),(1,6). Bishop at (5,6) — can it reach (1,5)? Diagonal: |5-1|=4, |6-5|=1. No. Can it reach (1,6)? |5-1|=4, |6-6|=0. No.
+- Black pawns at (2,6),(2,7),(2,8) cannot interpose on row 1 in one move.
+- Black pawn bp4 at (4,1) — can it reach (1,5) or (1,6)? No, pawns move forward (increasing row for black).
+
+**Can any black piece capture the rook at (1,4)?** No black piece can reach (1,4) in one move.
+
+## Conclusion
+
+**White Rook from (8,4) to (1,4)** delivers checkmate.
+
+**White Rook from (8, 4) to (1, 4).**

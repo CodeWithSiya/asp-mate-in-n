@@ -1,0 +1,44 @@
+No models found.
+grounding stopped because of errors
+
+Clingo log messages:
+MessageCode.RuntimeError: <block>:370:1-374:28: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];king_moves(R1,C1,R2,C2);#p_placement(white,king,#b(ID),#p,#p);new_placement(ID,R1,C1);(R1,C1)!=(ExR,ExC).
+<block>:370:27-30: note: 'ExC' is unsafe
+<block>:370:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:376:1-381:58: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];rook_moves(R1,C1,R2,C2);piece_type(white,ID,rook);new_placement(ID,R1,C1);not blocked_excl_bk_and_sq(ExR,ExC,R1,C1,R2,C2);(R1,C1)!=(ExR,ExC).
+<block>:376:27-30: note: 'ExC' is unsafe
+<block>:376:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:383:1-388:58: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];bishop_moves(R1,C1,R2,C2);piece_type(white,ID,bishop);new_placement(ID,R1,C1);not blocked_excl_bk_and_sq(ExR,ExC,R1,C1,R2,C2);(R1,C1)!=(ExR,ExC).
+<block>:383:27-30: note: 'ExC' is unsafe
+<block>:383:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:390:1-396:35: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];queen_moves(R1,C1,R2,C2);piece_type(white,ID,queen);new_placement(ID,R1,C1);not new_placement(ID,R2,C2);not blocked_excl_bk_and_sq(ExR,ExC,R1,C1,R2,C2);(R1,C1)!=(ExR,ExC).
+<block>:390:27-30: note: 'ExC' is unsafe
+<block>:390:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:398:1-402:28: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];knight_moves(R1,C1,R2,C2);piece_type(white,ID,knight);new_placement(ID,R1,C1);(R1,C1)!=(ExR,ExC).
+<block>:398:27-30: note: 'ExC' is unsafe
+<block>:398:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:404:1-409:28: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];square(R2,C2);piece_type(white,ID,pawn);new_placement(ID,R1,C1);(R1+-1)=R2;(C1+1)=C2;R2=(R1+-1);C2=(C1+1);(R1,C1)!=(ExR,ExC).
+<block>:404:27-30: note: 'ExC' is unsafe
+<block>:404:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:411:1-416:28: error: unsafe variables in:
+  white_threatens_excl(ExR,ExC,R2,C2):-[#inc_base];square(R2,C2);piece_type(white,ID,pawn);new_placement(ID,R1,C1);(R1+-1)=R2;(C1+-1)=C2;R2=(R1+-1);C2=(C1+-1);(R1,C1)!=(ExR,ExC).
+<block>:411:27-30: note: 'ExC' is unsafe
+<block>:411:22-25: note: 'ExR' is unsafe
+
+MessageCode.RuntimeError: <block>:419:1-421:26: error: unsafe variables in:
+  occupied_excl_bk_and_sq(ExR,ExC,R,C):-[#inc_base];occupied_excluding_bk(R,C);(R,C)!=(ExR,ExC).
+<block>:419:30-33: note: 'ExC' is unsafe
+<block>:419:25-28: note: 'ExR' is unsafe
+

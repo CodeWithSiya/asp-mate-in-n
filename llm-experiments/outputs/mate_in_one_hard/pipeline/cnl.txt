@@ -1,0 +1,5 @@
+White pieces: bishop wb1 on (6, 6), king wk on (2, 8), knight wn1 on (2, 6), knight wn2 on (5, 6), pawn wp1 on (1, 5), pawn wp2 on (2, 7), pawn wp3 on (3, 7), pawn wp4 on (3, 6), pawn wp5 on (5, 7), pawn wp6 on (6, 7), pawn wp7 on (6, 4), queen wq on (6, 2), rook wr1 on (4, 8), rook wr2 on (7, 7).
+Black pieces: bishop bb1 on (3, 1), bishop bb2 on (6, 1), king bk on (4, 3), knight bn1 on (3, 3), knight bn2 on (5, 3), pawn bp1 on (1, 2), pawn bp2 on (2, 2), pawn bp3 on (3, 5), pawn bp4 on (4, 4), pawn bp5 on (5, 4), pawn bp6 on (7, 2), pawn bp7 on (8, 3), pawn bp8 on (8, 4), queen bb1 on (8, 8), rook br1 on (1, 1), rook br2 on (8, 1).
+Side to move: white.
+Base fragment includes helper rules that derive legal_move/5 for white.
+Task: extend this base program into a full mate-in-one solver for the given position.

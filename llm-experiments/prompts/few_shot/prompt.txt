@@ -6,7 +6,7 @@ A mate in one occurs if a legal move by the side to move leaves the opponent kin
 
 Below are representative ASP examples that illustrate the structures you should imitate.
 
-Example 1: Graph coloring with integrity constraints
+Example 1: Graph coloring
 
 Input facts:
 node(a). node(b). node(c).
@@ -22,30 +22,46 @@ color(red;green;blue).
 
 #show assign/2.
 
-⸻
+---
 
-Example 2: Knight movement on a chess board
+Example 2: Reachability in a graph
 
 Input facts:
-knight(white,4,4).
+edge(a,b).
+edge(b,c).
+start(a).
 
 ASP program:
 
-coord(1..8).
-square(X,Y) :- coord(X), coord(Y).
+reachable(X) :- start(X).
+reachable(Y) :- reachable(X), edge(X,Y).
 
-move(X,Y,X+2,Y+1) :- knight(white,X,Y), square(X+2,Y+1).
-move(X,Y,X+2,Y-1) :- knight(white,X,Y), square(X+2,Y-1).
-move(X,Y,X-2,Y+1) :- knight(white,X,Y), square(X-2,Y+1).
-move(X,Y,X-2,Y-1) :- knight(white,X,Y), square(X-2,Y-1).
+#show reachable/1.
 
-#show move/4.
+---
 
-⸻
 
-Example 3: Generating a single choice
+Example 3: ASP encoding for detecting a constraint violation:
+
+Input facts:
+student(alice).
+student(bob).
+
+course(cs).
+course(math).
+
+enrolled(alice,cs).
+enrolled(alice,math).
 
 ASP program:
+
+:- enrolled(S,C1), enrolled(S,C2), C1 != C2, conflict(C1,C2).
+
+#show enrolled/2.
+
+---
+
+Example ASP encoding for generating choices:
 
 move(left;right;up;down).
 
@@ -53,7 +69,7 @@ move(left;right;up;down).
 
 #show action/1.
 
-⸻
+---
 
 Input predicates already exist inside the base fragment — do NOT redefine them:
 to_move(Color).
