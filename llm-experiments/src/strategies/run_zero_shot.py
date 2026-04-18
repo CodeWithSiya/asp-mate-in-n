@@ -78,6 +78,7 @@ def run_zero_shot_on_boards(
     max_new_tokens: int,
     temperature: float,
     prompt_file: Path,
+    run_semantic: bool = False,
 ) -> None:
 
     def _generate(spec: BoardSpec, usage: TokenUsage, board_facts: str) -> StrategyResult:  # noqa: ARG001
@@ -103,4 +104,5 @@ def run_zero_shot_on_boards(
         client=client,
         model=model,
         generate_fn=_generate,
+        run_semantic=run_semantic,
     )

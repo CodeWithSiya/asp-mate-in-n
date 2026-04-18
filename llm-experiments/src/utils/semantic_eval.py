@@ -109,8 +109,8 @@ def semantic_validate(
         "  1. Correctly encodes legal piece movement for the relevant pieces.\n"
         "  2. Correctly detects when the opponent king is in check after the move.\n"
         "  3. Correctly determines the opponent has no legal escape (mate condition).\n"
-        "  4. Uses the correct input predicates: piece(Color, Type, X, Y), king(Color, X, Y), to_move(Color).\n"
-        "  5. Outputs: mate_move(Color, Type, FromX, FromY, ToX, ToY).\n"
+        "  4. Uses the correct input predicates: placement(Color, Piece, Id, Row, Col), to_move(Color).\n"
+        "  5. Outputs: move(Id, R1, C1, R2, C2), in_check(Color), can_escape(Color), checkmate(Color).\n"
         "Respond with STRICT JSON ONLY (no prose), schema:\n"
         '{ "verdict": "VALID|INVALID", "score": 0..1, "confidence": 0..1, "reasons": "string" }\n'
         "Scoring: 1.0 = all conditions correctly encoded; 0.7-0.9 = minor omissions; 0.4-0.6 = partial; <0.4 = poor."

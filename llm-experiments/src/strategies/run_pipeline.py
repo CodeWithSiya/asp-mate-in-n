@@ -51,7 +51,7 @@ def _build_feedback_message(result: dict[str, Any], attempt: int) -> str:
     elif result.get("total_models", 0) == 0:
         lines.append(
             "Clingo ran successfully but found zero stable models. "
-            "Please adjust the ASP so it derives at least one mate_move/6 atom."
+            "Please adjust the ASP so it derives at least one move/5 atom and checkmate/1."
         )
     return "\n".join(lines)
 
@@ -72,6 +72,7 @@ def run_pipeline(
     max_new_tokens: int,
     temperature: float,
     clingo_retries: int,
+    run_semantic: bool = False,
 ) -> None:
     print(f"variant={variant!r}  model={model}  boards={len(specs)}")
 
@@ -231,32 +232,36 @@ def run_pipeline(
 
         status = _clingo_status(last_result)
 
-        print("  Stage 5: Semantic validation")
-        spec_text = base_fragment
-        sem_start = time.monotonic()
-        sem_feedback, sem_score, sem_conf, semantic_json = semantic_validate(
-            client,
-            model=model,
-            asp_code=asp_code,
-            spec_text=spec_text,
-            samples=3,
-            temperature=0.1,
-            reference_code=reference_code,
-            reference_path=reference_path,
-            candidate_clingo=last_result,
-        )
-        sem_time = round(time.monotonic() - sem_start, 4)
-        print(f"  → {sem_feedback}")
+        sem_feedback = sem_score = sem_conf = ""
+        semantic_json: dict[str, Any] = {}
+        sem_time = 0.0
+        if run_semantic:
+            print("  Stage 5: Semantic validation")
+            spec_text = base_fragment
+            sem_start = time.monotonic()
+            sem_feedback, sem_score, sem_conf, semantic_json = semantic_validate(
+                client,
+                model=model,
+                asp_code=asp_code,
+                spec_text=spec_text,
+                samples=3,
+                temperature=0.1,
+                reference_code=reference_code,
+                reference_path=reference_path,
+                candidate_clingo=last_result,
+            )
+            sem_time = round(time.monotonic() - sem_start, 4)
+            print(f"  → {sem_feedback}")
 
-        record_semantic_result(
-            strategy="pipeline",
-            board_id=board_id,
-            model=model,
-            feedback=sem_feedback,
-            score=sem_score,
-            confidence=sem_conf,
-            semantic=semantic_json,
-        )
+            record_semantic_result(
+                strategy="pipeline",
+                board_id=board_id,
+                model=model,
+                feedback=sem_feedback,
+                score=sem_score,
+                confidence=sem_conf,
+                semantic=semantic_json,
+            )
 
         metadata = {
             "id": board_id,

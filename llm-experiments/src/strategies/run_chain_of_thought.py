@@ -95,6 +95,7 @@ def run_chain_of_thought_on_boards(
     asp_prompt_path: Path,
     max_new_tokens: int,
     temperature: float,
+    run_semantic: bool = False,
 ) -> None:
 
     def _generate(spec: BoardSpec, usage: TokenUsage, base_program: str) -> StrategyResult:
@@ -138,4 +139,5 @@ def run_chain_of_thought_on_boards(
         client=client,
         model=model,
         generate_fn=_generate,
+        run_semantic=run_semantic,
     )

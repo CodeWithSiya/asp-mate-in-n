@@ -4,70 +4,84 @@ Given a curated mate-in-one base fragment (board state plus helper predicates th
 
 A mate in one occurs if a legal move by the side to move leaves the opponent king in check and the opponent has no legal reply that removes the check.
 
-Below are representative ASP examples that illustrate the structures you should imitate.
+Below are representative ASP examples that illustrate the structures you should use.
 
-Example 1: Graph coloring
+Example 1: Selecting exactly one move using a choice rule over legal_move/5.
 
-Input facts:
-node(a). node(b). node(c).
-edge(a,b). edge(b,c).
-
-ASP program:
-
-color(red;green;blue).
-
-1 { assign(N,C) : color(C) } 1 :- node(N).
-
-:- assign(X,C), assign(Y,C), edge(X,Y).
-
-#show assign/2.
+% Pick exactly one legal white move.
+1{ move(ID, R1, C1, R2, C2):
+        legal_move(ID, R1, C1, R2, C2),
+        placement(white, _, ID, R1, C1)
+}1.
 
 ---
 
-Example 2: Reachability in a graph
+Example 2: Deriving the board state after the chosen move (new_placement)
+and detecting captured pieces.
 
-Input facts:
-edge(a,b).
-edge(b,c).
-start(a).
+% The moved piece is now at its destination.
+new_placement(ID, R2, C2) :- move(ID, _, _, R2, C2).
 
-ASP program:
+% Every other piece stays, unless it was captured.
+new_placement(ID, R, C) :-
+    placement(_, _, ID, R, C),
+    not move(ID, _, _, _, _),
+    not captured(_, ID, _, _).
 
-reachable(X) :- start(X).
-reachable(Y) :- reachable(X), edge(X,Y).
-
-#show reachable/1.
-
----
-
-
-Example 3: ASP encoding for detecting a constraint violation:
-
-Input facts:
-student(alice).
-student(bob).
-
-course(cs).
-course(math).
-
-enrolled(alice,cs).
-enrolled(alice,math).
-
-ASP program:
-
-:- enrolled(S,C1), enrolled(S,C2), C1 != C2, conflict(C1,C2).
-
-#show enrolled/2.
+% A piece is captured when another piece moves onto its square.
+captured(ID1, ID2, R, C) :-
+    new_placement(ID1, R, C),
+    placement(_, _, ID2, R, C), ID1 != ID2.
 
 ---
 
-Example ASP encoding for generating choices:
+Example 3: Computing threats after the move (using the "after" state helpers
+already in the base fragment) and detecting check.
 
-move(left;right;up;down).
+% White piece threatens a square after the move.
+threaten(ID, R1, C1, R2, C2) :-
+    new_placement(ID, R1, C1),
+    legal_queen_move(white, after, R1, C1, R2, C2),
+    placement(white, queen, ID, _, _).
+% ... analogous rules for rook, bishop, knight, pawn, king.
 
-1 { action(A) : move(A) } 1.
+% Black king is in check if any white piece threatens its square.
+in_check(black) :- threaten(_, _, _, R, C), placement(black, king, bk, R, C).
 
-#show action/1.
+---
+
+Example 4: Checking whether the opponent can escape (king flight, blocking,
+capturing the attacker) and defining checkmate.
+
+% King flight: black king can move to a square not attacked by white.
+can_escape(black) :-
+    new_placement(bk, R1, C1),
+    legal_king_move(black, R1, C1, R2, C2),
+    not white_threatens(R2, C2).
+
+% Block: a black piece (not the king) moves onto the attack path.
+can_escape(black) :-
+    placement(black, rook, ID, R1, C1), ID != bk,
+    legal_rook_move(black, after, R1, C1, R2, C2),
+    threaten(A_ID, A_R1, A_C1, A_R2, A_C2),
+    placement(black, king, bk, A_R2, A_C2),
+    on_attack_path(R2, C2, A_R1, A_C1, A_R2, A_C2).
+% ... analogous block rules for queen, bishop, knight, pawn.
+
+% Capture: a black piece (not the king) captures the attacker.
+can_escape(black) :-
+    placement(black, rook, ID, R1, C1), ID != bk,
+    legal_rook_move(black, after, R1, C1, R2, C2),
+    placement(black, king, bk, BK_R, BK_C),
+    threaten(A_ID, _, _, BK_R, BK_C),
+    new_placement(A_ID, R2, C2).
+% ... analogous capture rules for queen, bishop, knight, pawn.
+
+% Checkmate: in check with no escape.
+checkmate(black) :- in_check(black), not can_escape(black).
+
+% Only keep answer sets where checkmate holds.
+:- not checkmate(black).
 
 ---
 
@@ -84,6 +98,16 @@ Your program must:
 	•	detect check on the opponent king, and
 	•	ensure the opponent has no legal move that escapes check (king moves, interpositions, captures).
 
-Output the mating move using an appropriate predicate (e.g., mate_move/5).
+Output predicates (must match exactly):
+  move(Id, R1, C1, R2, C2)   — the chosen mating move (Id is the piece identifier from placement/5, e.g. wq, wr1, wn2).
+  in_check(Color)             — the opponent is in check after the move.
+  can_escape(Color)           — the opponent can escape check (should be false for mate).
+  checkmate(Color)            — the opponent is checkmated.
+
+Use:
+  #show move/5.
+  #show in_check/1.
+  #show can_escape/1.
+  #show checkmate/1.
 
 Only output the ASP program.

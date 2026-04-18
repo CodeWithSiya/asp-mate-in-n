@@ -32,7 +32,7 @@ def generate_few_shot_program(
         "  • computes which squares white attacks after moving;\n"
         "  • checks if the black king is threatened;\n"
         "  • rules out escapes by analysing every black king move as well as blocks or captures;\n"
-        "  • keeps only moves that yield checkmate and outputs mate_move/6."
+        "  • keeps only moves that yield checkmate and outputs move/5, in_check/1, can_escape/1, checkmate/1."
         "\nOutput the entire ASP program (base fragment + reasoning) with no Markdown."
     )
     system_prompt = "You are an expert in Answer Set Programming and chess."
@@ -58,6 +58,7 @@ def run_few_shot_on_boards(
     prompt_file: Path,
     max_new_tokens: int,
     temperature: float,
+    run_semantic: bool = False,
 ) -> None:
 
     def _generate(spec: BoardSpec, usage: TokenUsage, base_program: str) -> StrategyResult:
@@ -85,4 +86,5 @@ def run_few_shot_on_boards(
         client=client,
         model=model,
         generate_fn=_generate,
+        run_semantic=run_semantic,
     )

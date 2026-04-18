@@ -16,20 +16,26 @@ Do NOT redefine the input predicates already present in the base fragment:
 Coordinate system: integers 1..8 (file: a=1 ... h=8, rank: 1 ... 8).
 Colors: white, black.  Piece types: queen, rook, bishop, knight, pawn.
 
-Output predicate:
-  mate_move(Color, Type, FromX, FromY, ToX, ToY).
+Output predicates (must match exactly):
+  move(Id, R1, C1, R2, C2)   — the chosen mating move (Id is the piece identifier from placement/5, e.g. wq, wr1, wn2).
+  in_check(Color)             — the opponent is in check after the move.
+  can_escape(Color)           — the opponent can escape check (should be false for mate).
+  checkmate(Color)            — the opponent is checkmated.
 
 Use:
-  #show mate_move/6.
+  #show move/5.
+  #show in_check/1.
+  #show can_escape/1.
+  #show checkmate/1.
 
 Example — queen slides along a rank with path-blocking:
 
   % A square (BX, FY) blocks a horizontal queen move from (FX, FY) to (TX, FY)
   % if BX lies strictly between FX and TX and is occupied.
   blocked_h(FX, FY, TX) :-
-      piece(_, _, BX, FY), FX < TX, BX > FX, BX < TX.
+      placement(_, _, _, BX, FY), FX < TX, BX > FX, BX < TX.
   blocked_h(FX, FY, TX) :-
-      piece(_, _, BX, FY), FX > TX, BX < FX, BX > TX.
+      placement(_, _, _, BX, FY), FX > TX, BX < FX, BX > TX.
   % Apply analogously for vertical (blocked_v) and diagonal (blocked_d) directions.
 
 Generate the full ASP program. Output ONLY the ASP program. No markdown fences, no explanations.

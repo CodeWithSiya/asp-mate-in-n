@@ -3,10 +3,6 @@ rows(1..8).
 cols(1..8).
 square(R, C):- rows(R), cols(C).
 
-%column display names
-%col_name(1,a). col_name(2,b). col_name(3,c). col_name(4,d).
-%col_name(5,e). col_name(6,f). col_name(7,g). col_name(8,h).
-
 %define players
 player(white; black).
 

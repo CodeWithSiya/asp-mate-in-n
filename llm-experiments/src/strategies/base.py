@@ -35,6 +35,7 @@ def run_board_strategy(
     client,
     model: str,
     generate_fn: GenerateFn,
+    run_semantic: bool = False,
 ) -> None:
     """Generic driver that handles persistence, Clingo, and semantic scoring."""
 
@@ -65,17 +66,20 @@ def run_board_strategy(
         else:
             status = "ok"
 
-        sem_feedback, sem_score, sem_conf, semantic_json = semantic_validate(
-            client,
-            model=model,
-            asp_code=result.asp_code,
-            spec_text=base_program_text,
-            samples=3,
-            temperature=0.1,
-            reference_code=reference_code,
-            reference_path=reference_path,
-            candidate_clingo=clingo_result,
-        )
+        sem_feedback = sem_score = sem_conf = ""
+        semantic_json: dict[str, Any] = {}
+        if run_semantic:
+            sem_feedback, sem_score, sem_conf, semantic_json = semantic_validate(
+                client,
+                model=model,
+                asp_code=result.asp_code,
+                spec_text=base_program_text,
+                samples=3,
+                temperature=0.1,
+                reference_code=reference_code,
+                reference_path=reference_path,
+                candidate_clingo=clingo_result,
+            )
 
         metadata: dict[str, Any] = {
             "id": board_id,
@@ -107,19 +111,21 @@ def run_board_strategy(
             metadata["reference_encoding"] = str(reference_path)
         metadata.update(result.metadata)
 
-        record_semantic_result(
-            strategy=strategy_name,
-            board_id=board_id,
-            model=model,
-            feedback=sem_feedback,
-            score=sem_score,
-            confidence=sem_conf,
-            semantic=semantic_json,
-        )
+        if run_semantic:
+            record_semantic_result(
+                strategy=strategy_name,
+                board_id=board_id,
+                model=model,
+                feedback=sem_feedback,
+                score=sem_score,
+                confidence=sem_conf,
+                semantic=semantic_json,
+            )
 
         (board_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
 
         print(
-            f"[{board_id}] {strategy_name}: status={status} semantic={sem_score:.2f} "
-            f"tokens {usage.prompt_tokens}+{usage.completion_tokens}"
+            f"[{board_id}] {strategy_name}: status={status}"
+            + (f" semantic={sem_score:.2f}" if run_semantic else "")
+            + f" tokens {usage.prompt_tokens}+{usage.completion_tokens}"
         )

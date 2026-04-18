@@ -106,6 +106,12 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_STRATEGIES),
         help="Subset of strategies to run (default: all).",
     )
+    parser.add_argument(
+        "--semantic",
+        action="store_true",
+        default=False,
+        help="Enable LLM-based semantic validation (default: off).",
+    )
     return parser.parse_args()
 
 
@@ -135,6 +141,7 @@ def run_experiment(args: argparse.Namespace) -> None:
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             prompt_file=args.zero_shot_prompt,
+            run_semantic=args.semantic,
         )
 
     if "few_shot" in selected:
@@ -149,6 +156,7 @@ def run_experiment(args: argparse.Namespace) -> None:
             prompt_file=args.few_shot_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
+            run_semantic=args.semantic,
         )
 
     if "chain_of_thought" in selected:
@@ -166,6 +174,7 @@ def run_experiment(args: argparse.Namespace) -> None:
             asp_prompt_path=args.asp_prompt,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
+            run_semantic=args.semantic,
         )
 
     if "pipeline" in selected:
@@ -188,6 +197,7 @@ def run_experiment(args: argparse.Namespace) -> None:
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             clingo_retries=args.clingo_retries,
+            run_semantic=args.semantic,
         )
 
     print("\nAll requested strategies completed.")

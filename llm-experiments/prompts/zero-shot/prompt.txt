@@ -23,15 +23,21 @@ A move is a mate-in-one if and only if:
   3. After the move, the opponent has no legal move that escapes check.
 
 Guidance:
-- Use the provided legal_move/5 rules to drive a `1 { choose_move(...) } 1` choice rule.
+- Use the provided legal_move/5 rules to drive a `1 { move(...) } 1` choice rule.
 - Derive new_placement/3 so you can reason about the board after the chosen move.
 - Compute which squares the opponent king could move to using the existing king_moves/4 helper, and determine whether each escape is attacked or occupied.
 - Detect check and ensure every escape attempt fails (king moves, interpositions, captures).
 
-Output the mating move as:
-  mate_move(Color, Type, FromX, FromY, ToX, ToY).
+Output predicates (must match exactly):
+  move(Id, R1, C1, R2, C2)   — the chosen mating move (Id is the piece identifier from placement/5, e.g. wq, wr1, wn2).
+  in_check(Color)             — the opponent is in check after the move.
+  can_escape(Color)           — the opponent can escape check (should be false for mate).
+  checkmate(Color)            — the opponent is checkmated.
 
 Use:
-  #show mate_move/6.
+  #show move/5.
+  #show in_check/1.
+  #show can_escape/1.
+  #show checkmate/1.
 
 Output ONLY the ASP program. No markdown, no explanations.
